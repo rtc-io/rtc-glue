@@ -1,0 +1,23 @@
+{
+  "name": "rtc-glue",
+  "version": "0.0.0",
+  "description": "A simple library for writing WebRTC applications an in HTML-centric way",
+  "main": "index.js",
+  "scripts": {
+    "test": "node test/all.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rtc-io/rtc-glue.git"
+  },
+  "keywords": [
+    "webrtc",
+    "rtc.io",
+    "html"
+  ],
+  "author": "Damon Oehlman <damon.oehlman@nicta.com.au>",
+  "license": "Apache 2.0",
+  "bugs": {
+    "url": "https://github.com/rtc-io/rtc-glue/issues"
+  }
+}
