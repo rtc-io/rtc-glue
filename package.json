@@ -21,10 +21,10 @@
   "bugs": {
     "url": "https://github.com/rtc-io/rtc-glue/issues"
   },
-  "devDependencies": {
-    "rtc-quickconnect": "~0.1.2"
-  },
+  "devDependencies": {},
   "dependencies": {
-    "rtc": "~0.5.1"
+    "rtc-quickconnect": "~0.1.2",
+    "rtc": "~0.5.1",
+    "eve": "~0.4.1"
   }
 }
