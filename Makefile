@@ -1,16 +1,16 @@
 MODULE_NAME=glue
+REQUIRED_TOOLS=browserify uglifyjs
 
 PHONY: dist
 
-deps:
-	@hash browserify 2>/dev/null || (echo "require browserify to be installed" && exit 1)
-	@hash uglifyjs 2>/dev/null || (echo "require uglifyjs to be installed" && exit 1)
+$(REQUIRED_TOOLS):
+	@hash $@ 2>/dev/null || (echo "please install $@" && exit 1)
 
-dist: deps
+dist: $(REQUIRED_TOOLS)
 	@mkdir -p dist
 
 	@echo "building"
-	@browserify index.js > dist/glue.js --standalone ${MODULE_NAME}
+	@browserify index.js > dist/$(MODULE_NAME).js --standalone $(MODULE_NAME)
 
 	@echo "minifying"
-	@uglifyjs dist/glue.js > dist/glue.min.js 2>/dev/null
+	@uglifyjs dist/$(MODULE_NAME).js > dist/$(MODULE_NAME).min.js 2>/dev/null
