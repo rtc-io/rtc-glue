@@ -13,6 +13,13 @@ following HTML:
 ```html
 <html>
 <body>
+<!-- video for our local capture -->
+<video data-autocapture data-source="local" />
+
+<!-- video for our friend (simply sourced from remote) -->
+<video data-source="remote" />
+
+<!-- make magic happen -->
 <script src="index.js"></script>
 </body>
 </html>
