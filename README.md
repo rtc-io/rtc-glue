@@ -20,17 +20,8 @@ following HTML:
 <video data-source="remote" />
 
 <!-- make magic happen -->
-<script src="index.js"></script>
+<script src="../dist/glue.js"></script>
+<script>glue();</script>
 </body>
 </html>
-```
-
-When combined with this simple JS gives you the following:
-
-```js
-var glue = require('rtc-glue')(document);
-var quickconnect = require('rtc-quickconnect');
-
-// when we get a peer connect them in the html
-quickconnect.on('peer', glue.connect);
 ```

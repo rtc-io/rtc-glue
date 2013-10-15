@@ -14,11 +14,7 @@
   with regards to named attributed, etc.  For instance, consider the
   following HTML:
 
-  <<< examples/simple/index.html
-
-  When combined with this simple JS gives you the following:
-
-  <<< examples/simple/index.js
+  <<< examples/simple.html
 
 **/
 module.exports = function() {
