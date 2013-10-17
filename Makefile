@@ -10,7 +10,7 @@ dist: $(REQUIRED_TOOLS)
 	@mkdir -p dist
 
 	@echo "building"
-	@browserify index.js > dist/$(MODULE_NAME).js --standalone $(MODULE_NAME)
+	@browserify index.js > dist/$(MODULE_NAME).js --debug --standalone $(MODULE_NAME)
 
 	@echo "minifying"
 	@uglifyjs dist/$(MODULE_NAME).js > dist/$(MODULE_NAME).min.js 2>/dev/null

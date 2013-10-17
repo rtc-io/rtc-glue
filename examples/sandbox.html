@@ -1,0 +1,17 @@
+<html>
+<body>
+<!-- video for our local capture -->
+<video id="front-facing" rtc-capture="camera" rtc-start="btn-start"></video>
+<video id="document" rtc-capture="screen"></video>
+
+<button id="btn-start">Capture Front Camera</button>
+
+<!-- video for our friend (simply sourced from remote) -->
+<video rtc-remote="office:front-facing"></video>
+<video rtc-remote="office:document"></video>
+
+<!-- make magic happen -->
+<script src="../dist/glue.js"></script>
+<script>glue();</script>
+</body>
+</html>

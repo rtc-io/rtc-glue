@@ -1,10 +1,7 @@
 <html>
 <body>
 <!-- video for our local capture -->
-<video id="main" rtc-capture="camera" oncapture="alert('hello');" />
-
-<!-- video for our friend (simply sourced from remote) -->
-<video rtc-remote=":main" />
+<video id="main" rtc-capture="camera" />
 
 <!-- make magic happen -->
 <script src="../dist/glue.js"></script>

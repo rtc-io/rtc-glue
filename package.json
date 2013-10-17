@@ -24,7 +24,8 @@
   "devDependencies": {},
   "dependencies": {
     "rtc-quickconnect": "~0.1.2",
-    "rtc": "~0.5.1",
-    "eve": "~0.4.1"
+    "rtc": "~0.5.3",
+    "cog": "~0.3.1",
+    "rtc-captureconfig": "~0.2.0"
   }
 }

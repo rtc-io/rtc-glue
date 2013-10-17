@@ -1,0 +1,18 @@
+<html>
+<body>
+<!-- video for our local capture -->
+<video id="main" rtc-capture="camera" />
+
+<!-- make magic happen -->
+<script src="../dist/glue.js"></script>
+<script>
+var vid = document.getElementById('main');
+
+vid.addEventListener('capture', function(evt) {
+  console.log('captured!!', evt.detail.stream);
+});
+
+glue();
+</script>
+</body>
+</html>
