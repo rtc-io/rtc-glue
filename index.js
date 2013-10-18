@@ -22,7 +22,25 @@ var selectorElements = '*[rtc-capture], *[rtc-remote]';
   with regards to named attributed, etc.  For instance, consider the
   following HTML:
 
+  <<< examples/capture-only.html
+
+  It is then possible to tweak the `getUserMedia` constraints using some
+  flags in the `rtc-capture` attribute:
+
   <<< examples/capture-tweakres.html
+
+  For those who prefer using separate attributes, you can achieve similar
+  behaviour using the `rtc-resolution` (or `rtc-res`) attribute:
+
+  <<< examples/res-attribute.html
+
+  ## On Custom Attributes
+
+  While we haven't 100% decided we are leaning towards the use of custom
+  `rtc-*` attributes for influencing the behaviour of the `rtc-glue` library.
+  While currently this is in violation with the HTML5 spec, it is an area
+  of active discussion in W3C land (given [AngularJS](http://angularjs.org/)
+  has adopted the `ng-*` attributes and is proving popular).
 
 **/
 var glue = module.exports = function(scope, opts) {
