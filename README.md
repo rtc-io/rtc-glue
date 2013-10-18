@@ -16,7 +16,7 @@ following HTML:
 <html>
 <body>
 <!-- video for our local capture -->
-<video id="main" rtc-capture="camera" />
+<video id="main" rtc-capture="camera"></video>
 
 <!-- make magic happen -->
 <script src="../dist/glue.js"></script>
@@ -31,7 +31,7 @@ flags in the `rtc-capture` attribute:
 <html>
 <body>
 <!-- video for our local capture -->
-<video id="main" rtc-capture="camera min:1280x720" />
+<video id="main" rtc-capture="camera min:1280x720"></video>
 
 <!-- make magic happen -->
 <script src="../dist/glue.js"></script>
@@ -46,7 +46,7 @@ behaviour using the `rtc-resolution` (or `rtc-res`) attribute:
 <html>
 <body>
 <!-- video for our local capture -->
-<video id="main" rtc-capture="camera" rtc-resolution="1280x720" />
+<video id="main" rtc-capture="camera" rtc-resolution="1280x720"></video>
 
 <!-- make magic happen -->
 <script src="../dist/glue.js"></script>
@@ -106,11 +106,16 @@ roles (e.g. student/teacher, consultant/customer, etc).  By specifying the
 `rtc-role` metadata you this role information will be announced as part
 of the `rtc-quickconnect` initialization.
 
-### initRemote(el) __internal__
+ 
+### Internal Functions
+
+#### createSession()
+
+#### initRemote(el)
 
 Handle the initialization of a rtc-remote target
 
-### initCapture(el) __internal__
+#### initCapture(el)
 
 Handle the initialization of an rtc-capture target
 

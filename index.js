@@ -1,10 +1,13 @@
 /* jshint node: true */
 'use strict';
 
+var eve = require('eve');
 var qsa = require('cog/qsa');
 var media = require('rtc/media');
 var captureConfig = require('rtc-captureconfig');
 var quickconnect = require('rtc-quickconnect');
+var transform = require('sdp-transform');
+var session;
 
 var reSep = /[\s\,]\s*/;
 var selectorElements = '*[rtc-capture], *[rtc-remote]';
@@ -102,17 +105,50 @@ if (typeof window != 'undefined') {
   });
 }
 
+/** 
+  ### Internal Functions
+**/
+
 /**
-  ### initRemote(el) __internal__
+  #### createSession() 
+**/
+function createSession() {
+  // TODO: check metadata for options
+  var session = quickconnect({
+    sdpfilter: function(sdpText, conn, type) {
+      // parse the sdp into a JSON representation
+      var sdp = transform.parse(sdpText);
+
+      // trigger the sdp transformation pipeline,
+      // pass by reference so a bit hacky
+      eve('glue.sdp.' + type, conn, sdp);
+
+      // send back the sdp data
+      return transform.write(sdp);
+    }
+  });
+
+  // session.on('peer', function() {
+  //   console.log(arguments);
+  // });
+
+  return session;
+}
+
+/**
+  #### initRemote(el)
 
   Handle the initialization of a rtc-remote target
 **/
 function initRemote(el) {
   console.log('initializing remote el: ', el);
+
+  // we have remotes, so let's make sure we have a session
+  session = session || createSession();
 }
 
 /**
-  ### initCapture(el) __internal__
+  #### initCapture(el)
 
   Handle the initialization of an rtc-capture target
 **/
@@ -129,7 +165,21 @@ function initCapture(el) {
   el.capture = enableCapture(el, captureConfig(configText));
 
   // trigger capture
-  el.capture();
+  el.capture(function(stream) {
+    // patch the stream into existing connections
+
+    // if we have a session, then add it to the stream
+    if (session) {
+      session.on('peer', function(peer) {
+        // about to get some 
+        eve.once('glue.sdp', function(sdp, conn) {
+          console.log(sdp);
+        });
+
+        peer.addStream(stream);
+      });
+    }
+  });
 }
 
 /** internal helpers */

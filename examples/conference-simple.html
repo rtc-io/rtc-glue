@@ -1,7 +1,15 @@
 <html>
+<style type="text/css">
+video {
+  max-width: 320px;
+}
+</style>
 <body>
 <!-- video for our local capture -->
 <video id="main" rtc-capture="camera"></video>
+
+<!-- remote container for our frient -->
+<video rtc-remote="main"></video>
 
 <!-- make magic happen -->
 <script src="../dist/glue.js"></script>
