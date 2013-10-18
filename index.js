@@ -53,6 +53,39 @@ var selectorElements = '*[rtc-capture], *[rtc-remote]';
 
   ## Reference
 
+  ### Element Attributes
+
+  #### rtc-capture
+
+  The presence of the `rtc-capture` attribute in a `video` or `audio` element
+  indicates that it is a getUserMedia capture target.
+
+  #### rtc-remote
+
+  To be completed.
+
+  ### Document Metadata
+
+  In the `rtc-glue` library we use document level `<meta>` tags to provide
+  glue with configuration information.  There are a number of configurable
+  options, each which is used in the form of:
+
+  ```html
+  <meta name="rtc-%flagname%" content="config content" />
+  ```
+
+  #### rtc-room
+
+  A custom room that new conversations will be created in.  If not specified
+  this will default to a value of `auto`.
+
+  #### rtc-role
+
+  In some conference scenarios, different participants are assigned different
+  roles (e.g. student/teacher, consultant/customer, etc).  By specifying the
+  `rtc-role` metadata you this role information will be announced as part
+  of the `rtc-quickconnect` initialization.
+
 **/
 var glue = module.exports = function(scope, opts) {
   // initialise the remote elements
