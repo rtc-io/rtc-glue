@@ -54,6 +54,15 @@ behaviour using the `rtc-resolution` (or `rtc-res`) attribute:
 </html>
 ```
 
+## Getting Glue
+
+Primarily glue is designed for use in a standalone situation, and thus
+comes pre-packaged in a UMDjs
+[distribution](https://github.com/rtc-io/rtc-glue/tree/master/dist). If
+you prefer working with browserify, then it will still work quite nicely
+and you should just `npm install rtc-glue` like you would with other
+modules of the rtc.io suite.
+
 ## On Custom Attributes
 
 While we haven't 100% decided we are leaning towards the use of custom
