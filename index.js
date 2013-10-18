@@ -42,6 +42,8 @@ var selectorElements = '*[rtc-capture], *[rtc-remote]';
   of active discussion in W3C land (given [AngularJS](http://angularjs.org/)
   has adopted the `ng-*` attributes and is proving popular).
 
+  ## Reference
+  
 **/
 var glue = module.exports = function(scope, opts) {
   // initialise the remote elements
