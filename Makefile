@@ -1,5 +1,5 @@
 MODULE_NAME=glue
-REQUIRED_TOOLS=browserify uglifyjs
+REQUIRED_TOOLS=browserify uglifyjs st inotifywait
 
 PHONY: dist
 
@@ -14,3 +14,8 @@ dist: $(REQUIRED_TOOLS)
 
 	@echo "minifying"
 	@uglifyjs dist/$(MODULE_NAME).js > dist/$(MODULE_NAME).min.js 2>/dev/null
+
+serve: dist
+	st --port 8000 --no-cache &
+
+	while true; do inotifywait -e create -e delete -e modify -q -r *.js node_modules || make dist; done

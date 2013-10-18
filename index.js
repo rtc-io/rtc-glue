@@ -4,6 +4,7 @@
 var qsa = require('cog/qsa');
 var media = require('rtc/media');
 var captureConfig = require('rtc-captureconfig');
+var quickconnect = require('rtc-quickconnect');
 
 var reSep = /[\s\,]\s*/;
 var selectorElements = '*[rtc-capture], *[rtc-remote]';
@@ -21,7 +22,7 @@ var selectorElements = '*[rtc-capture], *[rtc-remote]';
   with regards to named attributed, etc.  For instance, consider the
   following HTML:
 
-  <<< examples/simple.html
+  <<< examples/capture-tweakres.html
 
 **/
 var glue = module.exports = function(scope, opts) {
@@ -31,6 +32,13 @@ var glue = module.exports = function(scope, opts) {
   // initialise the capture elements
   qsa('*[rtc-capture]', scope).forEach(initCapture);
 };
+
+// autoload glue
+if (typeof window != 'undefined') {
+  window.addEventListener('load', function(evt) {
+    glue();
+  });
+}
 
 /**
   ### initRemote(el) __internal__

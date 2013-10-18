@@ -14,14 +14,18 @@ following HTML:
 <html>
 <body>
 <!-- video for our local capture -->
-<video data-autocapture data-source="local" />
-
-<!-- video for our friend (simply sourced from remote) -->
-<video data-source="remote" />
+<video id="main" rtc-capture="camera min:1280x720" />
 
 <!-- make magic happen -->
 <script src="../dist/glue.js"></script>
-<script>glue();</script>
 </body>
 </html>
 ```
+
+### initRemote(el) __internal__
+
+Handle the initialization of a rtc-remote target
+
+### initCapture(el) __internal__
+
+Handle the initialization of an rtc-capture target
