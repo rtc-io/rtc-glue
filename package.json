@@ -23,11 +23,13 @@
   },
   "devDependencies": {},
   "dependencies": {
-    "rtc-quickconnect": "~0.1.3",
     "rtc": "~0.5.4",
     "cog": "~0.3.1",
     "rtc-captureconfig": "~0.2.0",
-    "sdp-transform": "~0.2.1",
-    "eve": "~0.4.1"
+    "sdp-transform": "~0.3.1",
+    "eve": "~0.4.1",
+    "sdp-lines": "~0.1.0",
+    "dd": "~0.3.0",
+    "async": "~0.2.9"
   }
 }

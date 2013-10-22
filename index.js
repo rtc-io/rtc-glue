@@ -1,16 +1,34 @@
 /* jshint node: true */
+/* global window: false */
+/* global document: false */
+/* global location: false */
+/* global CustomEvent: false */
+/* global io: false */
 'use strict';
 
+var async = require('async');
 var eve = require('eve');
-var qsa = require('cog/qsa');
+var qsa = require('dd/qsa');
+var on = require('dd/on');
+var defaults = require('cog/defaults');
+var logger = require('cog/logger');
+var signaller = require('rtc/signaller');
 var media = require('rtc/media');
 var captureConfig = require('rtc-captureconfig');
-var quickconnect = require('rtc-quickconnect');
 var transform = require('sdp-transform');
+var liner = require('sdp-lines');
 var session;
 
 var reSep = /[\s\,]\s*/;
-var selectorElements = '*[rtc-capture], *[rtc-remote]';
+var reTrailingSlash = /\/$/;
+
+var selectorElements = '*[rtc-capture], *[rtc-peer]';
+var startupOps = [ initSession ];
+
+// initialise our config (using rtc- named metadata tags)
+var config = defaults({}, require('dd/meta')(/^rtc-(.*)$/), {
+  signaller: 'http://rtcjs.io:50000'
+});
 
 /**
   # rtc-glue
@@ -63,7 +81,7 @@ var selectorElements = '*[rtc-capture], *[rtc-remote]';
   The presence of the `rtc-capture` attribute in a `video` or `audio` element
   indicates that it is a getUserMedia capture target.
 
-  #### rtc-remote
+  #### rtc-peer
 
   To be completed.
 
@@ -100,40 +118,27 @@ var glue = module.exports = function(scope, opts) {
 
 // autoload glue
 if (typeof window != 'undefined') {
-  window.addEventListener('load', function(evt) {
-    glue();
-  });
+  startupOps.push(on('load', window));
 }
 
-/** 
-  ### Internal Functions
-**/
+// run the startup operations
+async.parallel(startupOps, function(err) {
+  // announce ourselves
+  session.announce({
+    room: config.room || generateRoomName(),
+    role: config.role
+  });
+
+  // TODO: check errors
+  console.log('startup ops completed, starting glue');
+  glue();
+});
+
+// logger.enable('*');
 
 /**
-  #### createSession() 
+  ### Internal Functions
 **/
-function createSession() {
-  // TODO: check metadata for options
-  var session = quickconnect({
-    sdpfilter: function(sdpText, conn, type) {
-      // parse the sdp into a JSON representation
-      var sdp = transform.parse(sdpText);
-
-      // trigger the sdp transformation pipeline,
-      // pass by reference so a bit hacky
-      eve('glue.sdp.' + type, conn, sdp);
-
-      // send back the sdp data
-      return transform.write(sdp);
-    }
-  });
-
-  // session.on('peer', function() {
-  //   console.log(arguments);
-  // });
-
-  return session;
-}
 
 /**
   #### initRemote(el)
@@ -141,10 +146,27 @@ function createSession() {
   Handle the initialization of a rtc-remote target
 **/
 function initRemote(el) {
-  console.log('initializing remote el: ', el);
+  var parts = (el.getAttribute('rtc-remote') || '').split(':');
+  var session;
 
-  // we have remotes, so let's make sure we have a session
-  session = session || createSession();
+  // if the parts has only one part specified, it is targeting the implied
+  // remote "peer"
+  if (parts.length === 1) {
+    parts.unshift('peer');
+  }
+
+  // let's get our session
+  session = getOrCreateSession(parts[0]);
+
+
+  session.on('peer', function(peer) {
+    peer.addEventListener('addstream', function(evt) {
+      console.log('remote:');
+      console.log(evt.stream);
+      console.log(evt.stream.getVideoTracks());
+      media(evt.stream).render(el);
+    });
+  });
 }
 
 /**
@@ -152,14 +174,19 @@ function initRemote(el) {
 
   Handle the initialization of an rtc-capture target
 **/
-function initCapture(el) { 
+function initCapture(el) {
   // read the capture instructions
   var configText = el.getAttribute('rtc-capture') || '';
   var res = el.getAttribute('rtc-resolution') || el.getAttribute('rtc-res');
   var fps = el.getAttribute('rtc-fps');
 
-  res && (configText += ' min:' + res + ' max:' + res);
-  fps && (configText += ' minfps:' + fps + ' maxfps:' + fps);
+  if (res) {
+    configText += ' min:' + res + ' max:' + res;
+  }
+
+  if (fps) {
+    configText += ' minfps:' + fps + ' maxfps:' + fps;
+  }
 
   // patch in a capture method to the element
   el.capture = enableCapture(el, captureConfig(configText));
@@ -171,10 +198,20 @@ function initCapture(el) {
     // if we have a session, then add it to the stream
     if (session) {
       session.on('peer', function(peer) {
-        // about to get some 
-        eve.once('glue.sdp', function(sdp, conn) {
-          console.log(sdp);
+        // about to get some
+        eve.once('glue.sdp', function(sdp, conn, type) {
+          if (peer !== conn) {
+            return;
+          }
+
+          sdp.modify(/^m/, function(line) {
+            return [line, 'i=' + el.id, 'a=label:' + el.id];
+          });
         });
+
+        console.log('local:');
+        console.log(stream);
+        console.log(stream.getVideoTracks());
 
         peer.addStream(stream);
       });
@@ -204,4 +241,33 @@ function enableCapture(el, config) {
       }
     });
   };
+}
+
+function generateRoomName() {
+  // initialise if not set
+  if (! location.hash) {
+    location.hash = Math.pow(2, 53) * Math.random();
+  }
+
+  return location.hash.slice(1);
+}
+
+function initSession(callback) {
+  var script = document.createElement('script');
+  var url = config.signaller.replace(reTrailingSlash, '');
+
+  script.src = url + '/socket.io/socket.io.js';
+  script.addEventListener('load', function() {
+    console.log('loaded socket.io');
+
+    // create our signaller
+    session = signaller(io.connect(config.signaller), {
+      dataEvent: 'message',
+      openEvent: 'connect'
+    });
+
+    callback();
+  });
+
+  document.body.appendChild(script);
 }
