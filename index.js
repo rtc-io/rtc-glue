@@ -257,7 +257,7 @@ function initSession(callback) {
   var url = config.signaller.replace(reTrailingSlash, '');
 
   script.src = url + '/socket.io/socket.io.js';
-  script.addEventListener('load', function() {
+  on('load', script, function() {
     console.log('loaded socket.io');
 
     // create our signaller
