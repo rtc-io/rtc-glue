@@ -80,7 +80,7 @@ has adopted the `ng-*` attributes and is proving popular).
 The presence of the `rtc-capture` attribute in a `video` or `audio` element
 indicates that it is a getUserMedia capture target.
 
-#### rtc-remote
+#### rtc-peer
 
 To be completed.
 
@@ -106,18 +106,29 @@ roles (e.g. student/teacher, consultant/customer, etc).  By specifying the
 `rtc-role` metadata you this role information will be announced as part
 of the `rtc-quickconnect` initialization.
 
- 
 ### Internal Functions
 
-#### createSession()
-
-#### initRemote(el)
+#### initPeer(el)
 
 Handle the initialization of a rtc-remote target
 
 #### initCapture(el)
 
 Handle the initialization of an rtc-capture target
+
+### SessionManager
+
+The SessionManager class assists with interacting with the signalling
+server and creating peer connections between valid parties.  It uses
+eve to create a decoupled way to get peer information.
+
+#### announce()
+
+Announce ourselves on the signalling channel
+
+#### broadcast(stream)
+
+Broadcast a stream to our connected peers.
 
 ## License(s)
 

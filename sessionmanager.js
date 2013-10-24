@@ -5,6 +5,14 @@
 var eve = require('eve');
 var rtc = require('rtc');
 
+/**
+  ### SessionManager
+
+  The SessionManager class assists with interacting with the signalling
+  server and creating peer connections between valid parties.  It uses
+  eve to create a decoupled way to get peer information.
+
+**/
 function SessionManager(config) {
   if (! (this instanceof SessionManager)) {
     return new SessionManager(config);
