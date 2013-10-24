@@ -58,13 +58,16 @@ SessionManager.prototype.announce = function() {
 SessionManager.prototype.broadcast = function(stream) {
   var peers = this.peers;
 
+  console.log('broadcasting stream', stream);
+
   // add to existing streams
   Object.keys(peers).forEach(function(peerId) {
     peers[peerId].addStream(stream);
   });
 
   // when a new peer arrives, add it to that peer also
-  eve('glue.peer.join', function(peer) {
+  eve.on('glue.peer.join', function(peer) {
+    console.log('broadcasting existing stream to new peer');
     peer.addStream(stream);
   });
 };
@@ -97,9 +100,10 @@ SessionManager.prototype._bindEvents = function(signaller) {
     // wait for the monitor to tell us we have an active connection
     // before attempting to bind to any UI elements
     monitor.once('active', function() {
-      // trigger an eve event
-      eve(ns, null, peer, data.id);
+      eve('glue.peer.active.' + (data.role || 'none'), null, peer, data.id);
     });
+
+    eve('glue.peer.join.' + (data.role || 'none'), null, peer, data.id);
 
     // announce ourself
     mgr.announce();

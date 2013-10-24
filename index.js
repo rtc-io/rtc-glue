@@ -179,6 +179,8 @@ function initPeer(el) {
   var data = el._rtc || (el._rtc = {});
 
   function addStream(stream) {
+    console.log('received remote stream', stream);
+
     // if we don't have a stream or already have a stream id then bail
     if (data.streamId) {
       return;
@@ -202,13 +204,14 @@ function initPeer(el) {
 
   // iterate through the peers and monitor events for that peer
   peerRoles.forEach(function(role) {
-    eve.on('glue.peer.join.' + role, function(peer, peerId) {
-      console.log('peer joined');
-
+    eve.on('glue.peer.active.' + role, function(peer, peerId) {
       // if the element already has a peer, then do nothing
       if (data.peerId) {
         return;
       }
+
+      console.log('peer active', peer.getRemoteStreams());
+
 
       // associate the peer id with the element
       data.peerId = peerId;
