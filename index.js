@@ -17,6 +17,7 @@ var signaller = require('rtc/signaller');
 var media = require('rtc/media');
 var captureConfig = require('rtc-captureconfig');
 var transform = require('sdp-transform');
+var resetEl = require('rtc-core/reset');
 // var liner = require('sdp-lines');
 
 var reSep = /[\s\,]\s*/;
@@ -210,7 +211,6 @@ function initPeer(el) {
       }
 
       // associate the peer id with the element
-      data.peer = peer;
       data.peerId = peerId;
 
       // add existing streams
@@ -221,11 +221,11 @@ function initPeer(el) {
     });
   });
 
-  eve.on('glue.peer.leave', function(id) {
+  eve.on('glue.peer.leave', function(peer, peerId) {
     // if the peer leaving matches the remote peer, then cleanup
-    if (data.peerId === id) {
-      // remove the stream from the element
-      data.peer.removeEventListener('addstream', handleStream);
+    if (data.peerId === peerId) {
+      // reset the target media element
+      resetEl(el);
 
       // reset the rtc data
       data = el._rtc = {};
@@ -261,27 +261,6 @@ function initCapture(el) {
   el.capture(function(stream) {
     // broadcast the stream through the session manager
     sessionMgr.broadcast(stream, { id: el.id });
-    // patch the stream into existing connections
-
-    // if we have a session, then add it to the stream
-    // session.on('peer', function(peer) {
-    //   // about to get some
-    //   eve.once('glue.sdp', function(sdp, conn, type) {
-    //     if (peer !== conn) {
-    //       return;
-    //     }
-
-    //     sdp.modify(/^m/, function(line) {
-    //       return [line, 'i=' + el.id, 'a=label:' + el.id];
-    //     });
-    //   });
-
-    //   console.log('local:');
-    //   console.log(stream);
-    //   console.log(stream.getVideoTracks());
-
-    //   peer.addStream(stream);
-    // });
   });
 }
 

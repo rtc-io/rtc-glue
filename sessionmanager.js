@@ -106,6 +106,16 @@ SessionManager.prototype._bindEvents = function(signaller) {
   });
 
   signaller.on('leave', function(id) {
-    eve('glue.peer.leave', null, id);
+    // get the peer
+    var peer = mgr.peers[id];
+
+    // if this is a peer we know about, then close and send a notification
+    if (peer) {
+      peer.close();
+      mgr.peers[id] = undefined;
+
+      // trigger the notification
+      eve('glue.peer.leave', null, peer, id);
+    }
   });
 };
