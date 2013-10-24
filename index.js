@@ -10,25 +10,28 @@ var async = require('async');
 var eve = require('eve');
 var qsa = require('dd/qsa');
 var on = require('dd/on');
+var extend = require('cog/extend');
 var defaults = require('cog/defaults');
 var logger = require('cog/logger');
 var signaller = require('rtc/signaller');
 var media = require('rtc/media');
 var captureConfig = require('rtc-captureconfig');
 var transform = require('sdp-transform');
-var liner = require('sdp-lines');
-var session;
+// var liner = require('sdp-lines');
 
 var reSep = /[\s\,]\s*/;
 var reTrailingSlash = /\/$/;
 
-var selectorElements = '*[rtc-capture], *[rtc-peer]';
-var startupOps = [ initSession ];
-
 // initialise our config (using rtc- named metadata tags)
 var config = defaults({}, require('dd/meta')(/^rtc-(.*)$/), {
-  signaller: 'http://rtcjs.io:50000'
+  room: location.hash.slice(1),
+  signaller: 'socket.io',
+  signalhost: 'http://rtcjs.io:50000'
 });
+
+var SessionManager = require('./sessionmanager');
+var sessionMgr;
+
 
 /**
   # rtc-glue
@@ -109,64 +112,127 @@ var config = defaults({}, require('dd/meta')(/^rtc-(.*)$/), {
 
 **/
 var glue = module.exports = function(scope, opts) {
-  // initialise the remote elements
-  qsa('*[rtc-remote]', scope).forEach(initRemote);
+  var startupOps = [];
 
-  // initialise the capture elements
-  qsa('*[rtc-capture]', scope).forEach(initCapture);
+  // apply any external opts to the configuration
+  extend(config, opts);
+
+  // if the signaller is socket.io then load
+  if (config.signaller === 'socket.io') {
+    startupOps.push(loadSocketIO);
+  }
+
+  // run the startup operations
+  async.parallel(startupOps, function(err) {
+    var peers;
+
+    // TODO: check errors
+    console.log('startup ops completed, starting glue', config);
+
+    // create the session manager
+    sessionMgr = new SessionManager(config);
+
+    // if we don't have a room name, generate a room name
+    if (! config.room) {
+      config.room = generateRoomName();
+    }
+
+    // initialise the remote elements
+    peers = qsa('*[rtc-peer]', scope).map(initPeer);
+
+    // initialise the capture elements
+    qsa('*[rtc-capture]', scope).forEach(initCapture);
+
+    // if we have any peers, then announce ourselves via the session manager
+    if (peers.length > 0) {
+      sessionMgr.announce();
+    }
+  });
 };
 
 // autoload glue
-if (typeof window != 'undefined') {
-  startupOps.push(on('load', window));
+if (typeof window != 'undefined' && (! config.autoload)) {
+  on('load', window, function() {
+    glue();
+  });
 }
 
-// run the startup operations
-async.parallel(startupOps, function(err) {
-  // announce ourselves
-  session.announce({
-    room: config.room || generateRoomName(),
-    role: config.role
-  });
 
-  // TODO: check errors
-  console.log('startup ops completed, starting glue');
-  glue();
-});
-
-// logger.enable('*');
+logger.enable('*');
 
 /**
   ### Internal Functions
 **/
 
 /**
-  #### initRemote(el)
+  #### initPeer(el)
 
   Handle the initialization of a rtc-remote target
 **/
-function initRemote(el) {
-  var parts = (el.getAttribute('rtc-remote') || '').split(':');
-  var session;
+function initPeer(el) {
+  var propValue = el.getAttribute('rtc-peer');
+  var targetStream = el.getAttribute('rtc-stream');
+  var peerRoles = propValue ? propValue.split(reSep) : ['*'];
 
-  // if the parts has only one part specified, it is targeting the implied
-  // remote "peer"
-  if (parts.length === 1) {
-    parts.unshift('peer');
+  // create a data container that we will attach to the element
+  var data = el._rtc || (el._rtc = {});
+
+  function addStream(stream) {
+    // if we don't have a stream or already have a stream id then bail
+    if (data.streamId) {
+      return;
+    }
+
+    // if we have a particular target stream, then go looking for it
+    if (targetStream) {
+
+    }
+    // otherwise, automatically associate with the element
+    else {
+      console.log('attaching stream');
+      media(stream).render(el);
+      data.streamId = stream.id;
+    }
   }
 
-  // let's get our session
-  session = getOrCreateSession(parts[0]);
+  function handleStream(evt) {
+    addStream(evt.stream);
+  }
 
+  // iterate through the peers and monitor events for that peer
+  peerRoles.forEach(function(role) {
+    eve.on('glue.peer.join.' + role, function(peer, peerId) {
+      console.log('peer joined');
 
-  session.on('peer', function(peer) {
-    peer.addEventListener('addstream', function(evt) {
-      console.log('remote:');
-      console.log(evt.stream);
-      console.log(evt.stream.getVideoTracks());
-      media(evt.stream).render(el);
+      // if the element already has a peer, then do nothing
+      if (data.peerId) {
+        return;
+      }
+
+      // associate the peer id with the element
+      data.peer = peer;
+      data.peerId = peerId;
+
+      // add existing streams
+      [].slice.call(peer.getRemoteStreams()).forEach(addStream);
+
+      // listen for add straem events
+      peer.addEventListener('addstream', handleStream);
     });
   });
+
+  eve.on('glue.peer.leave', function(id) {
+    // if the peer leaving matches the remote peer, then cleanup
+    if (data.peerId === id) {
+      // remove the stream from the element
+      data.peer.removeEventListener('addstream', handleStream);
+
+      // reset the rtc data
+      data = el._rtc = {};
+    }
+  });
+
+  return el;
 }
 
 /**
@@ -193,29 +259,29 @@ function initCapture(el) {
 
   // trigger capture
   el.capture(function(stream) {
+    // broadcast the stream through the session manager
+    sessionMgr.broadcast(stream, { id: el.id });
     // patch the stream into existing connections
 
     // if we have a session, then add it to the stream
-    if (session) {
-      session.on('peer', function(peer) {
-        // about to get some
-        eve.once('glue.sdp', function(sdp, conn, type) {
-          if (peer !== conn) {
-            return;
-          }
+    // session.on('peer', function(peer) {
+    //   // about to get some
+    //   eve.once('glue.sdp', function(sdp, conn, type) {
+    //     if (peer !== conn) {
+    //       return;
+    //     }
 
-          sdp.modify(/^m/, function(line) {
-            return [line, 'i=' + el.id, 'a=label:' + el.id];
-          });
-        });
+    //     sdp.modify(/^m/, function(line) {
+    //       return [line, 'i=' + el.id, 'a=label:' + el.id];
+    //     });
+    //   });
 
-        console.log('local:');
-        console.log(stream);
-        console.log(stream.getVideoTracks());
+    //   console.log('local:');
+    //   console.log(stream);
+    //   console.log(stream.getVideoTracks());
 
-        peer.addStream(stream);
-      });
-    }
+    //   peer.addStream(stream);
+    // });
   });
 }
 
@@ -244,30 +310,17 @@ function enableCapture(el, config) {
 }
 
 function generateRoomName() {
-  // initialise if not set
-  if (! location.hash) {
-    location.hash = Math.pow(2, 53) * Math.random();
-  }
+  location.hash = Math.pow(2, 53) * Math.random();
 
   return location.hash.slice(1);
 }
 
-function initSession(callback) {
+function loadSocketIO(callback) {
   var script = document.createElement('script');
-  var url = config.signaller.replace(reTrailingSlash, '');
+  var url = config.signalhost.replace(reTrailingSlash, '');
 
   script.src = url + '/socket.io/socket.io.js';
-  on('load', script, function() {
-    console.log('loaded socket.io');
-
-    // create our signaller
-    session = signaller(io.connect(config.signaller), {
-      dataEvent: 'message',
-      openEvent: 'connect'
-    });
-
-    callback();
-  });
-
   document.body.appendChild(script);
+
+  on('load', script, callback);
 }

@@ -1,42 +1,103 @@
 /* jshint node: true */
+/* global io: false */
 'use strict';
 
 var eve = require('eve');
-var quickconnect = require('rtc-quickconnect');
-var sessions = {};
+var rtc = require('rtc');
 
-/**
-  ### sessionmanager
+function SessionManager(config) {
+  if (! (this instanceof SessionManager)) {
+    return new SessionManager(config);
+  }
 
-  Session management for a glue application.
-**/
+  // initialise the room and our role
+  this.room = config.room;
+  this.role = config.role;
 
-/**
-  #### createSession()
-**/
-var createSession = exports.createSession = function() {
-  // TODO: check metadata for options
-  var session = quickconnect({
-    sdpfilter: function(sdpText, conn, type) {
-      // parse the sdp into a JSON representation
-      var sdp = liner(sdpText);
-      // var sdp = transform.parse(sdpText);
+  // save the config
+  this.cfg = config;
 
-      // trigger the sdp transformation pipeline,
-      // pass by reference so a bit hacky
-      eve('glue.sdp.' + type, null, sdp, conn, type);
+  // initialise our peers list
+  this.peers = {};
 
-      // send back the sdp data
-      return sdp.toString(); // transform.write(sdp, { outerOrder: ['v', 'o', 's', 't', 'i', 'u', 'e', 'p', 'c', 'b', 'z', 'a', 'r'] });
-    }
+  // create our signalling interface
+  this.signaller = rtc.signaller(io.connect(config.signalhost), {
+    dataEvent: 'message',
+    openEvent: 'connect'
   });
 
-  return session;
+  // hook up signaller events
+  this._bindEvents(this.signaller);
 }
 
-/**
-  #### getOrCreateSession(remoteId)
-**/
-exports.getOrCreateSession = function(remoteId) {
+module.exports = SessionManager;
 
+/**
+  #### announce()
+
+  Announce ourselves on the signalling channel
+**/
+SessionManager.prototype.announce = function() {
+  this.signaller.announce({ room: this.room, role: this.role });
+};
+
+/**
+  #### broadcast(stream)
+
+  Broadcast a stream to our connected peers.
+
+**/
+SessionManager.prototype.broadcast = function(stream) {
+  var peers = this.peers;
+
+  // add to existing streams
+  Object.keys(peers).forEach(function(peerId) {
+    peers[peerId].addStream(stream);
+  });
+
+  // when a new peer arrives, add it to that peer also
+  eve('glue.peer.join', function(peer) {
+    peer.addStream(stream);
+  });
+};
+
+/* internal methods */
+
+SessionManager.prototype._bindEvents = function(signaller) {
+  var mgr = this;
+
+  // TODO: extract the meaningful parts from the config
+  // var opts = this.cfg;
+
+  signaller.on('announce', function(data) {
+    var ns = 'glue.peer.join.' + (data.role || 'none')
+    var peer;
+    var monitor;
+
+    // if the room does not match our room
+    // OR, we already have an active peer for that id, then abort
+    if (data.room !== mgr.room || mgr.peers[data.id]) {
+      return;
+    }
+
+    // create our peer connection
+    peer = mgr.peers[data.id] = rtc.createConnection();
+
+    // couple the connections
+    monitor = rtc.couple(peer, { id: data.id }, signaller);
+
+    // wait for the monitor to tell us we have an active connection
+    // before attempting to bind to any UI elements
+    monitor.once('active', function() {
+      // trigger an eve event
+      eve(ns, null, peer, data.id);
+    });
+
+    // announce ourself
+    mgr.announce();
+  });
+
+  signaller.on('leave', function(id) {
+    eve('glue.peer.leave', null, id);
+  });
 };
