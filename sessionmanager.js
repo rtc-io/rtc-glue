@@ -4,6 +4,7 @@
 
 var eve = require('eve');
 var rtc = require('rtc');
+var extend = require('cog/extend');
 
 /**
   ### SessionManager
@@ -55,21 +56,36 @@ SessionManager.prototype.announce = function() {
   Broadcast a stream to our connected peers.
 
 **/
-SessionManager.prototype.broadcast = function(stream) {
+SessionManager.prototype.broadcast = function(stream, data) {
   var peers = this.peers;
-
-  console.log('broadcasting stream', stream);
+  var mgr = this;
 
   // add to existing streams
   Object.keys(peers).forEach(function(peerId) {
+    mgr.tagStream(stream, peerId, data);
     peers[peerId].addStream(stream);
   });
 
   // when a new peer arrives, add it to that peer also
-  eve.on('glue.peer.join', function(peer) {
-    console.log('broadcasting existing stream to new peer');
+  eve.on('glue.peer.join', function(peer, peerId) {
+    mgr.tagStream(stream, peerId, data);
     peer.addStream(stream);
   });
+};
+
+/**
+  #### tagStream(stream, targetId, data)
+
+  The tagStream is used to pass stream identification information along to the
+  target peer.  This information is useful when a particular remote media
+  element is expecting the contents of a particular capture target.
+
+**/
+SessionManager.prototype.tagStream = function(stream, targetId, data) {
+  this.signaller.to(targetId).send('/streamdata', extend({}, data, {
+    id: stream.id,
+    label: stream.label
+  }));
 };
 
 /* internal methods */
@@ -121,5 +137,9 @@ SessionManager.prototype._bindEvents = function(signaller) {
       // trigger the notification
       eve('glue.peer.leave', null, peer, id);
     }
+  });
+
+  signaller.on('streamdata', function(data) {
+    console.log('got stream data', data, arguments);
   });
 };

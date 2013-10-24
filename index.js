@@ -159,7 +159,7 @@ if (typeof window != 'undefined' && (! config.autoload)) {
 }
 
 
-logger.enable('*');
+// logger.enable('*');
 
 /**
   ### Internal Functions
@@ -263,7 +263,7 @@ function initCapture(el) {
   // trigger capture
   el.capture(function(stream) {
     // broadcast the stream through the session manager
-    sessionMgr.broadcast(stream, { id: el.id });
+    sessionMgr.broadcast(stream, { name: el.id });
   });
 }
 
