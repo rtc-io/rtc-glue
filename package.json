@@ -23,7 +23,7 @@
   },
   "devDependencies": {},
   "dependencies": {
-    "rtc": "~0.5.4",
+    "rtc": "~0.5.6",
     "cog": "~0.3.1",
     "rtc-captureconfig": "~0.2.0",
     "sdp-transform": "~0.3.1",

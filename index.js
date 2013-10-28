@@ -26,7 +26,6 @@ var reTrailingSlash = /\/$/;
 // initialise our config (using rtc- named metadata tags)
 var config = defaults({}, require('dd/meta')(/^rtc-(.*)$/), {
   room: location.hash.slice(1),
-  signaller: 'socket.io',
   signalhost: 'http://rtcjs.io:50000'
 });
 
@@ -113,15 +112,10 @@ var sessionMgr;
 
 **/
 var glue = module.exports = function(scope, opts) {
-  var startupOps = [];
+  var startupOps = [ loadPrimus ];
 
   // apply any external opts to the configuration
   extend(config, opts);
-
-  // if the signaller is socket.io then load
-  if (config.signaller === 'socket.io') {
-    startupOps.push(loadSocketIO);
-  }
 
   // run the startup operations
   async.parallel(startupOps, function(err) {
@@ -130,13 +124,13 @@ var glue = module.exports = function(scope, opts) {
     // TODO: check errors
     console.log('startup ops completed, starting glue', config);
 
-    // create the session manager
-    sessionMgr = new SessionManager(config);
-
     // if we don't have a room name, generate a room name
     if (! config.room) {
       config.room = generateRoomName();
     }
+
+    // create the session manager
+    sessionMgr = new SessionManager(config);
 
     // initialise the remote elements
     peers = qsa('*[rtc-peer]', scope).map(initPeer);
@@ -297,11 +291,11 @@ function generateRoomName() {
   return location.hash.slice(1);
 }
 
-function loadSocketIO(callback) {
+function loadPrimus(callback) {
   var script = document.createElement('script');
   var url = config.signalhost.replace(reTrailingSlash, '');
 
-  script.src = url + '/socket.io/socket.io.js';
+  script.src = url + '/rtc.io/primus.js';
   document.body.appendChild(script);
 
   on('load', script, callback);

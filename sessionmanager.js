@@ -4,6 +4,7 @@
 
 var eve = require('eve');
 var rtc = require('rtc');
+var createSignaller = require('rtc/signaller');
 var extend = require('cog/extend');
 
 /**
@@ -29,11 +30,11 @@ function SessionManager(config) {
   // initialise our peers list
   this.peers = {};
 
+  // create our underlying socket connection
+  this.socket = new Primus(config.signalhost);
+
   // create our signalling interface
-  this.signaller = rtc.signaller(io.connect(config.signalhost), {
-    dataEvent: 'message',
-    openEvent: 'connect'
-  });
+  this.signaller = createSignaller(this.socket);
 
   // hook up signaller events
   this._bindEvents(this.signaller);
@@ -100,6 +101,8 @@ SessionManager.prototype._bindEvents = function(signaller) {
     var ns = 'glue.peer.join.' + (data.role || 'none')
     var peer;
     var monitor;
+
+    console.log('received announce');
 
     // if the room does not match our room
     // OR, we already have an active peer for that id, then abort
