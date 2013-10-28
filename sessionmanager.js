@@ -62,6 +62,7 @@ SessionManager.prototype.broadcast = function(stream, data) {
   var mgr = this;
 
   // add to existing streams
+  console.log(Object.keys(peers));
   Object.keys(peers).forEach(function(peerId) {
     mgr.tagStream(stream, peerId, data);
     peers[peerId].addStream(stream);
@@ -69,6 +70,8 @@ SessionManager.prototype.broadcast = function(stream, data) {
 
   // when a new peer arrives, add it to that peer also
   eve.on('glue.peer.join', function(peer, peerId) {
+    console.log('peer joined: ' + peerId);
+
     mgr.tagStream(stream, peerId, data);
     peer.addStream(stream);
   });
@@ -102,13 +105,17 @@ SessionManager.prototype._bindEvents = function(signaller) {
     var peer;
     var monitor;
 
-    console.log('received announce');
-
     // if the room does not match our room
     // OR, we already have an active peer for that id, then abort
-    if (data.room !== mgr.room || mgr.peers[data.id]) {
-      return;
+    if (data.room !== mgr.room) {
+      return console.log('received announce for incorrect room');
     }
+
+    if (mgr.peers[data.id]) {
+      return console.log('known peer');
+    }
+
+    console.log('received announce');
 
     // create our peer connection
     peer = mgr.peers[data.id] = rtc.createConnection();
