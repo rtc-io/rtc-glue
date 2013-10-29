@@ -4,6 +4,7 @@
 
 var eve = require('eve');
 var rtc = require('rtc');
+var logger = require('cog/logger')('glue-sessionmanager');
 var createSignaller = require('rtc/signaller');
 var extend = require('cog/extend');
 
@@ -53,7 +54,7 @@ module.exports = SessionManager;
 SessionManager.prototype.announce = function(targetId) {
   var scope = targetId ? this.signaller.to(targetId) : this.signaller;
 
-  console.log('announcing self to: ' + (targetId || 'all'));
+  logger('announcing self to: ' + (targetId || 'all'));
   scope.announce({ room: this.room, role: this.role });
 };
 
@@ -67,23 +68,30 @@ SessionManager.prototype.broadcast = function(stream, data) {
   var peers = this.peers;
   var mgr = this;
 
-  console.log('broadcasting stream: ', stream);
+  function connectPeer(peer, peerId) {
+    mgr.tagStream(stream, peerId, data);
+
+    try {
+      peer.addStream(stream);
+    }
+    catch (e) {
+      logger('captured error attempting to add stream: ', e);
+    }
+  }
 
   // add to existing streams
   Object.keys(peers).forEach(function(peerId) {
     if (peers[peerId]) {
-      mgr.tagStream(stream, peerId, data);
-      peers[peerId].addStream(stream);
+      connectPeer(peers[peerId], peerId);
     }
   });
 
   // when a new peer arrives, add it to that peer also
-  console.log('adding eve listener');
-  eve.on('glue.peer.join', function(peer, peerId) {
-    console.log('!!!! peer joined: ' + peerId);
+  eve.on('glue.peer.join', connectPeer);
 
-    mgr.tagStream(stream, peerId, data);
-    peer.addStream(stream);
+  // when the stream ends disconnect the listener
+  stream.addEventListener('ended', function() {
+    eve.off('glue.peer.join', connectPeer);
   });
 };
 
