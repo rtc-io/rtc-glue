@@ -30,6 +30,9 @@ function SessionManager(config) {
   // initialise our peers list
   this.peers = {};
 
+  // initialise the streams data list
+  this.streams = {};
+
   // create our underlying socket connection
   this.socket = new Primus(config.signalhost);
 
@@ -47,8 +50,11 @@ module.exports = SessionManager;
 
   Announce ourselves on the signalling channel
 **/
-SessionManager.prototype.announce = function() {
-  this.signaller.announce({ room: this.room, role: this.role });
+SessionManager.prototype.announce = function(targetId) {
+  var scope = targetId ? this.signaller.to(targetId) : this.signaller;
+
+  console.log('announcing self to: ' + (targetId || 'all'));
+  scope.announce({ room: this.room, role: this.role });
 };
 
 /**
@@ -61,8 +67,9 @@ SessionManager.prototype.broadcast = function(stream, data) {
   var peers = this.peers;
   var mgr = this;
 
+  console.log('broadcasting stream: ', stream);
+
   // add to existing streams
-  console.log(Object.keys(peers));
   Object.keys(peers).forEach(function(peerId) {
     mgr.tagStream(stream, peerId, data);
     peers[peerId].addStream(stream);
@@ -75,6 +82,33 @@ SessionManager.prototype.broadcast = function(stream, data) {
     mgr.tagStream(stream, peerId, data);
     peer.addStream(stream);
   });
+};
+
+/**
+  #### getStreamData(stream, callback)
+
+  Given the input stream `stream`, return the data for the stream.  The
+  provided `callback` will not be called until relevant data is held by
+  the session manager.
+
+**/
+SessionManager.prototype.getStreamData = function(stream, callback) {
+  var id = stream && stream.id;
+  var data = this.streams[id];
+
+  // if we don't have an id, then abort
+  if (! id) {
+    return;
+  }
+
+  // if we have data already, return it
+  if (data) {
+    callback(data);
+  }
+  // otherwise, wait for the data to be created
+  else {
+    eve.once('glue.streamdata.' + id, callback);
+  }
 };
 
 /**
@@ -99,6 +133,7 @@ SessionManager.prototype._bindEvents = function(signaller) {
 
   // TODO: extract the meaningful parts from the config
   // var opts = this.cfg;
+  console.log('initializing event handlers');
 
   signaller.on('announce', function(data) {
     var ns = 'glue.peer.join.' + (data.role || 'none')
@@ -115,8 +150,6 @@ SessionManager.prototype._bindEvents = function(signaller) {
       return console.log('known peer');
     }
 
-    console.log('received announce');
-
     // create our peer connection
     peer = mgr.peers[data.id] = rtc.createConnection();
 
@@ -131,8 +164,8 @@ SessionManager.prototype._bindEvents = function(signaller) {
 
     eve('glue.peer.join.' + (data.role || 'none'), null, peer, data.id);
 
-    // announce ourself
-    mgr.announce();
+    // introduce ourself to the new peer
+    mgr.announce(data.id);
   });
 
   signaller.on('leave', function(id) {
@@ -150,6 +183,8 @@ SessionManager.prototype._bindEvents = function(signaller) {
   });
 
   signaller.on('streamdata', function(data) {
-    console.log('got stream data', data, arguments);
+    // save the stream data to the local stream
+    mgr.streams[data.id] = data;
+    eve('glue.streamdata.' + data.id, null, data);
   });
 };

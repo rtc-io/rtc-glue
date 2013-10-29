@@ -172,9 +172,13 @@ function initPeer(el) {
   // create a data container that we will attach to the element
   var data = el._rtc || (el._rtc = {});
 
-  function addStream(stream) {
-    console.log('received remote stream', stream);
+  function attachStream(stream) {
+    console.log('attaching stream');
+    media(stream).render(el);
+    data.streamId = stream.id;
+  }
 
+  function addStream(stream, peer) {
     // if we don't have a stream or already have a stream id then bail
     if (data.streamId) {
       return;
@@ -182,18 +186,20 @@ function initPeer(el) {
 
     // if we have a particular target stream, then go looking for it
     if (targetStream) {
+      console.log('requesting stream data');
+      sessionMgr.getStreamData(stream, function(data) {
+        console.log('got stream data', data);
 
+        // if it's a match, then attach
+        if (data && data.name === targetStream) {
+          attachStream(stream);
+        }
+      });
     }
     // otherwise, automatically associate with the element
     else {
-      console.log('attaching stream');
-      media(stream).render(el);
-      data.streamId = stream.id;
+      attachStream(stream);
     }
-  }
-
-  function handleStream(evt) {
-    addStream(evt.stream);
   }
 
   // iterate through the peers and monitor events for that peer
@@ -206,7 +212,6 @@ function initPeer(el) {
 
       console.log('peer active', peer.getRemoteStreams());
 
-
       // associate the peer id with the element
       data.peerId = peerId;
 
@@ -214,7 +219,9 @@ function initPeer(el) {
       [].slice.call(peer.getRemoteStreams()).forEach(addStream);
 
       // listen for add straem events
-      peer.addEventListener('addstream', handleStream);
+      peer.addEventListener('addstream', function(evt) {
+        addStream(evt.stream, peer);
+      });
     });
   });
 
