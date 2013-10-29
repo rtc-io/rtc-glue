@@ -153,7 +153,7 @@ if (typeof window != 'undefined' && (! config.autoload)) {
 }
 
 
-// logger.enable('*');
+logger.enable('*');
 
 /**
   ### Internal Functions

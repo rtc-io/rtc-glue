@@ -71,13 +71,16 @@ SessionManager.prototype.broadcast = function(stream, data) {
 
   // add to existing streams
   Object.keys(peers).forEach(function(peerId) {
-    mgr.tagStream(stream, peerId, data);
-    peers[peerId].addStream(stream);
+    if (peers[peerId]) {
+      mgr.tagStream(stream, peerId, data);
+      peers[peerId].addStream(stream);
+    }
   });
 
   // when a new peer arrives, add it to that peer also
+  console.log('adding eve listener');
   eve.on('glue.peer.join', function(peer, peerId) {
-    console.log('peer joined: ' + peerId);
+    console.log('!!!! peer joined: ' + peerId);
 
     mgr.tagStream(stream, peerId, data);
     peer.addStream(stream);
