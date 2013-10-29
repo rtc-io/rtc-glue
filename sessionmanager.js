@@ -144,7 +144,7 @@ SessionManager.prototype._bindEvents = function(signaller) {
 
   // TODO: extract the meaningful parts from the config
   // var opts = this.cfg;
-  console.log('initializing event handlers');
+  logger('initializing event handlers');
 
   signaller.on('announce', function(data) {
     var ns = 'glue.peer.join.' + (data.role || 'none')
@@ -154,11 +154,11 @@ SessionManager.prototype._bindEvents = function(signaller) {
     // if the room does not match our room
     // OR, we already have an active peer for that id, then abort
     if (data.room !== mgr.room) {
-      return console.log('received announce for incorrect room');
+      return logger('received announce for incorrect room');
     }
 
     if (mgr.peers[data.id]) {
-      return console.log('known peer');
+      return logger('known peer');
     }
 
     // create our peer connection

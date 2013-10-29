@@ -12,7 +12,7 @@ var qsa = require('dd/qsa');
 var on = require('dd/on');
 var extend = require('cog/extend');
 var defaults = require('cog/defaults');
-var logger = require('cog/logger');
+var logger = require('cog/logger')('glue');
 var signaller = require('rtc/signaller');
 var media = require('rtc/media');
 var captureConfig = require('rtc-captureconfig');
@@ -122,7 +122,7 @@ var glue = module.exports = function(scope, opts) {
     var peers;
 
     // TODO: check errors
-    console.log('startup ops completed, starting glue', config);
+    logger('startup ops completed, starting glue', config);
 
     // if we don't have a room name, generate a room name
     if (! config.room) {
@@ -153,7 +153,7 @@ if (typeof window != 'undefined' && (! config.autoload)) {
 }
 
 
-logger.enable('*');
+require('cog/logger').enable('*');
 
 /**
   ### Internal Functions
@@ -173,7 +173,7 @@ function initPeer(el) {
   var data = el._rtc || (el._rtc = {});
 
   function attachStream(stream) {
-    console.log('attaching stream');
+    logger('attaching stream');
     media(stream).render(el);
     data.streamId = stream.id;
   }
@@ -186,9 +186,9 @@ function initPeer(el) {
 
     // if we have a particular target stream, then go looking for it
     if (targetStream) {
-      console.log('requesting stream data');
+      logger('requesting stream data');
       sessionMgr.getStreamData(stream, function(data) {
-        console.log('got stream data', data);
+        logger('got stream data', data);
 
         // if it's a match, then attach
         if (data && data.name === targetStream) {
@@ -210,7 +210,7 @@ function initPeer(el) {
         return;
       }
 
-      console.log('peer active', peer.getRemoteStreams());
+      logger('peer active', peer.getRemoteStreams());
 
       // associate the peer id with the element
       data.peerId = peerId;
