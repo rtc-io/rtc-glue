@@ -91,9 +91,15 @@ example:
 
 ```html
 <html>
+<style type="text/css">
+video {
+  max-width: 320px;
+}
+</style>
 <body>
 <!-- video for our local capture -->
-<video id="main" rtc-capture="camera:1"></video>
+<video id="main" rtc-capture="camera:0"></video>
+<video id="secondary" rtc-capture="camera:1"></video>
 
 <!-- make magic happen -->
 <script src="../dist/glue.js"></script>

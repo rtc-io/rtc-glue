@@ -96,7 +96,7 @@ var sources;
   machine (if it is able to query devices).  The following is a larger
   example:
 
-  <<< examples/capture-targeted.html
+  <<< examples/capture-multicam.html
 
   ## Reference
 
