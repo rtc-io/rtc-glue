@@ -91,11 +91,6 @@ example:
 
 ```html
 <html>
-<style type="text/css">
-video {
-  max-width: 320px;
-}
-</style>
 <body>
 <!-- video for our local capture -->
 <video id="main" rtc-capture="camera:0"></video>
