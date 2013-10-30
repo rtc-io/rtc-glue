@@ -63,13 +63,12 @@ you prefer working with browserify, then it will still work quite nicely
 and you should just `npm install rtc-glue` like you would with other
 modules of the rtc.io suite.
 
-## On Custom Attributes
+## Running the Examples
 
-While we haven't 100% decided we are leaning towards the use of custom
-`rtc-*` attributes for influencing the behaviour of the `rtc-glue` library.
-While currently this is in violation with the HTML5 spec, it is an area
-of active discussion in W3C land (given [AngularJS](http://angularjs.org/)
-has adopted the `ng-*` attributes and is proving popular).
+This module of the [rtc.io](https://rtc.io/) suite is a little different
+to others in that it comes with a ready to run js file.  Simply start
+a webserver in the root of the directory after cloning.  If you are looking
+for a good one, I'd recommend [st](https://github.com/isaacs/st).
 
 ## Targeted Media Capture
 
@@ -101,6 +100,14 @@ example:
 </body>
 </html>
 ```
+
+## On Custom Attributes
+
+While we haven't 100% decided we are leaning towards the use of custom
+`rtc-*` attributes for influencing the behaviour of the `rtc-glue` library.
+While currently this is in violation with the HTML5 spec, it is an area
+of active discussion in W3C land (given [AngularJS](http://angularjs.org/)
+has adopted the `ng-*` attributes and is proving popular).
 
 ## Reference
 
