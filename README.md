@@ -54,6 +54,26 @@ behaviour using the `rtc-resolution` (or `rtc-res`) attribute:
 </html>
 ```
 
+## Conferencing Example
+
+The following is a simple example of conferencing using some hosted rtc.io
+signalling:
+
+```html
+<html>
+<body>
+<!-- video for our local capture -->
+<video id="main" rtc-capture="camera"></video>
+
+<!-- remote container for our frient -->
+<video rtc-peer rtc-stream="main" muted></video>
+
+<!-- make magic happen -->
+<script src="../dist/glue.js"></script>
+</body>
+</html>
+```
+
 ## Getting Glue
 
 Primarily glue is designed for use in a standalone situation, and thus

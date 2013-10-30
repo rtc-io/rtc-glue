@@ -7,8 +7,8 @@ video {
 </style>
 <body>
 <!-- video for our local capture -->
-<video id="main" rtc-capture="camera"></video>
-<video id="secondary" rtc-capture="camera"></video>
+<video id="main" rtc-capture="camera:0"></video>
+<video id="secondary" rtc-capture="camera:1"></video>
 
 <!-- remote container for our frient -->
 <video rtc-peer rtc-stream="main" muted></video>

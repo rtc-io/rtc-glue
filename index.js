@@ -61,6 +61,13 @@ var sources;
 
   <<< examples/res-attribute.html
 
+  ## Conferencing Example
+
+  The following is a simple example of conferencing using some hosted rtc.io
+  signalling:
+
+  <<< examples/conference-simple.html
+
   ## Getting Glue
 
   Primarily glue is designed for use in a standalone situation, and thus
