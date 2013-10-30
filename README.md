@@ -71,6 +71,36 @@ While currently this is in violation with the HTML5 spec, it is an area
 of active discussion in W3C land (given [AngularJS](http://angularjs.org/)
 has adopted the `ng-*` attributes and is proving popular).
 
+## Targeted Media Capture
+
+The draft
+[Media Capture spec](http://dev.w3.org/2011/webrtc/editor/getusermedia.html)
+introduces the ability to query media devices on the machine.  This is
+currently available through the `MediaStreamTrack.getSources` function.
+
+If available then you can target the capture of a particular input device
+through the use of a numbered device capture specification.  For example:
+
+```html
+<video rtc-capture="camera:1"></video>
+```
+
+Would atttempt to capture the 2nd (0-indexed) camera available on the
+machine (if it is able to query devices).  The following is a larger
+example:
+
+```html
+<html>
+<body>
+<!-- video for our local capture -->
+<video id="main" rtc-capture="camera:1"></video>
+
+<!-- make magic happen -->
+<script src="../dist/glue.js"></script>
+</body>
+</html>
+```
+
 ## Reference
 
 ### Element Attributes
@@ -129,6 +159,18 @@ Announce ourselves on the signalling channel
 #### broadcast(stream)
 
 Broadcast a stream to our connected peers.
+
+#### getStreamData(stream, callback)
+
+Given the input stream `stream`, return the data for the stream.  The
+provided `callback` will not be called until relevant data is held by
+the session manager.
+
+#### tagStream(stream, targetId, data)
+
+The tagStream is used to pass stream identification information along to the
+target peer.  This information is useful when a particular remote media
+element is expecting the contents of a particular capture target.
 
 ## License(s)
 

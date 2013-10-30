@@ -22,6 +22,8 @@ var resetEl = require('rtc-core/reset');
 
 var reSep = /[\s\,]\s*/;
 var reTrailingSlash = /\/$/;
+var canGetSources = typeof MediaStreamTrack != 'undefined' &&
+  MediaStreamTrack.getSources;
 
 // initialise our config (using rtc- named metadata tags)
 var config = defaults({}, require('dd/meta')(/^rtc-(.*)$/), {
@@ -31,6 +33,7 @@ var config = defaults({}, require('dd/meta')(/^rtc-(.*)$/), {
 
 var SessionManager = require('./sessionmanager');
 var sessionMgr;
+var sources;
 
 
 /**
@@ -74,6 +77,26 @@ var sessionMgr;
   While currently this is in violation with the HTML5 spec, it is an area
   of active discussion in W3C land (given [AngularJS](http://angularjs.org/)
   has adopted the `ng-*` attributes and is proving popular).
+
+  ## Targeted Media Capture
+
+  The draft
+  [Media Capture spec](http://dev.w3.org/2011/webrtc/editor/getusermedia.html)
+  introduces the ability to query media devices on the machine.  This is
+  currently available through the `MediaStreamTrack.getSources` function.
+
+  If available then you can target the capture of a particular input device
+  through the use of a numbered device capture specification.  For example:
+
+  ```html
+  <video rtc-capture="camera:1"></video>
+  ```
+
+  Would atttempt to capture the 2nd (0-indexed) camera available on the
+  machine (if it is able to query devices).  The following is a larger
+  example:
+
+  <<< examples/capture-targeted.html
 
   ## Reference
 
@@ -271,8 +294,13 @@ function initCapture(el) {
 /** internal helpers */
 
 function enableCapture(el, config) {
-  return function(callback) {
-    var stream = media({ constraints: config.toConstraints() });
+
+  function cap(callback) {
+    var stream = media({
+      constraints: config.toConstraints({
+        sources: sources
+      })
+    });
 
     // render the stream to the target element
     stream.render(el);
@@ -288,6 +316,23 @@ function enableCapture(el, config) {
       if (typeof callback == 'function') {
         callback(stream);
       }
+    });
+  }
+
+  return function(callback) {
+    // if we already have sources, or cannot get source information
+    // then skip straight to capture
+    if (sources || (! canGetSources)) {
+      return cap(callback);
+    }
+
+    // get and update sources
+    MediaStreamTrack.getSources(function(s) {
+      // update the sources
+      sources = s;
+
+      // capture
+      cap(callback)
     });
   };
 }
