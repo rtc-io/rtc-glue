@@ -135,15 +135,21 @@ var sources;
 
 **/
 var glue = module.exports = function(scope, opts) {
-  var startupOps = [ loadPrimus ];
+  var startupOps = [];
+
+  // initialise the remote elements
+  var peers = qsa('*[rtc-peer]', scope).map(initPeer);
+
+  // if we have peers, then we are going to need primus
+  if (peers.length > 0) {
+    startupOps.push(loadPrimus);
+  }
 
   // apply any external opts to the configuration
   extend(config, opts);
 
   // run the startup operations
   async.parallel(startupOps, function(err) {
-    var peers;
-
     // TODO: check errors
     logger('startup ops completed, starting glue', config);
 
@@ -153,10 +159,7 @@ var glue = module.exports = function(scope, opts) {
     }
 
     // create the session manager
-    sessionMgr = new SessionManager(config);
-
-    // initialise the remote elements
-    peers = qsa('*[rtc-peer]', scope).map(initPeer);
+    sessionMgr = typeof Primus != 'undefined' && new SessionManager(config);
 
     // initialise the capture elements
     qsa('*[rtc-capture]', scope).forEach(initCapture);
@@ -287,7 +290,9 @@ function initCapture(el) {
   // trigger capture
   el.capture(function(stream) {
     // broadcast the stream through the session manager
-    sessionMgr.broadcast(stream, { name: el.id });
+    if (sessionMgr) {
+      sessionMgr.broadcast(stream, { name: el.id });
+    }
   });
 }
 
