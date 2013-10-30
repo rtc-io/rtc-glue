@@ -90,9 +90,10 @@ SessionManager.prototype.broadcast = function(stream, data) {
   eve.on('glue.peer.join', connectPeer);
 
   // when the stream ends disconnect the listener
-  stream.addEventListener('ended', function() {
+  // TODO: use addEventListener once supported
+  stream.onended = function() {
     eve.off('glue.peer.join', connectPeer);
-  });
+  };
 };
 
 /**
