@@ -7,6 +7,7 @@
 'use strict';
 
 var async = require('async');
+var url = require('url');
 var eve = require('eve');
 var qsa = require('dd/qsa');
 var on = require('dd/on');
@@ -371,10 +372,12 @@ function generateRoomName() {
 
 function loadPrimus(callback) {
   var script;
-  var url = config.signalhost.replace(reTrailingSlash, '') + '/rtc.io/primus.js';
+  var baseUrl = config.signalhost.replace(reTrailingSlash, '');
+  var basePath = url.parse(config.signalhost).pathname;
+  var scriptSrc = baseUrl + '/rtc.io/primus.js';
 
   // look for the script first
-  script = document.querySelector('script[src="' + url + '"]');
+  script = document.querySelector('script[src="' + scriptSrc + '"]');
 
   // if we found, the script trigger the callback immediately
   if (script) {
@@ -383,10 +386,19 @@ function loadPrimus(callback) {
 
   // otherwise create the script and load primus
   script = document.createElement('script');
-  script.src = url;
+  script.src = scriptSrc;
 
-  logger('attempting to load primus from: ' + url);
+  logger('attempting to load primus from: ' + scriptSrc);
   document.body.appendChild(script);
 
-  on('load', script, callback);
+  on('load', script, function() {
+    // if we have a signalhost that is not basepathed at /
+    // then tweak the primus prototype
+    if (basePath !== '/') {
+      Primus.prototype.pathname = basePath.replace(reTrailingSlash, '') +
+        Primus.prototype.pathname;
+    }
+
+    callback();
+  });
 }
