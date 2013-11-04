@@ -28,7 +28,7 @@ var canGetSources = typeof MediaStreamTrack != 'undefined' &&
 // initialise our config (using rtc- named metadata tags)
 var config = defaults({}, require('dd/meta')(/^rtc-(.*)$/), {
   room: location.hash.slice(1),
-  signalhost: 'http://rtcjs.io:50000'
+  signalhost: location.origin || 'http://rtcjs.io:50000'
 });
 
 var SessionManager = require('./sessionmanager');
@@ -166,6 +166,7 @@ var glue = module.exports = function(scope, opts) {
   async.parallel(startupOps, function(err) {
     // TODO: check errors
     logger('startup ops completed, starting glue', config);
+    eve('glue.ready');
 
     // if we don't have a room name, generate a room name
     if (! config.room) {
@@ -369,10 +370,22 @@ function generateRoomName() {
 }
 
 function loadPrimus(callback) {
-  var script = document.createElement('script');
-  var url = config.signalhost.replace(reTrailingSlash, '');
+  var script;
+  var url = config.signalhost.replace(reTrailingSlash, '') + '/rtc.io/primus.js';
 
-  script.src = url + '/rtc.io/primus.js';
+  // look for the script first
+  script = document.querySelector('script[src="' + url + '"]');
+
+  // if we found, the script trigger the callback immediately
+  if (script) {
+    return callback();
+  }
+
+  // otherwise create the script and load primus
+  script = document.createElement('script');
+  script.src = url;
+
+  logger('attempting to load primus from: ' + url);
   document.body.appendChild(script);
 
   on('load', script, callback);
