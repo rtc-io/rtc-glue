@@ -185,10 +185,16 @@ var glue = module.exports = function(scope, opts) {
   });
 };
 
+// expose the config through glue
+glue.config = config;
+
 // autoload glue
-if (typeof window != 'undefined' && (! config.autoload)) {
+if (typeof window != 'undefined') {
   on('load', window, function() {
-    glue();
+    // check if we can autoload
+    if (config.autoload === undefined || config.autoload) {
+      glue();
+    }
   });
 }
 
