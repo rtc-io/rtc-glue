@@ -4,7 +4,13 @@ Glue is a high-level approach to building WebRTC applications. It is
 primarily designed for web application coders who would prefer to spend
 their time in HTML and CSS rather than JS.
 
-[![experimental](http://hughsk.github.io/stability-badges/dist/experimental.svg)](http://github.com/hughsk/stability-badges)
+
+[![NPM](https://nodei.co/npm/rtc-glue.png)](https://nodei.co/npm/rtc-glue/)
+
+
+[![browser support](https://ci.testling.com/rtc-io/rtc-glue.png)](https://ci.testling.com/rtc-io/rtc-glue)
+
+[![unstable](http://hughsk.github.io/stability-badges/dist/unstable.svg)](http://github.com/hughsk/stability-badges)
 
 ## Example Usage
 
