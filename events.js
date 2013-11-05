@@ -17,7 +17,7 @@ var rePrefixed = /^glue\./;
 
   For example:
 
-  <<< examples/events-namespacing.js
+  <<< examples/event-namespacing.js
 
 **/
 ['on', 'once', 'off'].forEach(function(method) {
