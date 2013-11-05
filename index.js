@@ -187,6 +187,9 @@ var glue = module.exports = function(scope, opts) {
   });
 };
 
+// wire in the events helper
+glue.events = require('./events');
+
 // expose the config through glue
 glue.config = config;
 
