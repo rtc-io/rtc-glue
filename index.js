@@ -113,19 +113,6 @@ var sources;
   of active discussion in W3C land (given [AngularJS](http://angularjs.org/)
   has adopted the `ng-*` attributes and is proving popular).
 
-  ## Reference
-
-  ### Element Attributes
-
-  #### rtc-capture
-
-  The presence of the `rtc-capture` attribute in a `video` or `audio` element
-  indicates that it is a getUserMedia capture target.
-
-  #### rtc-peer
-
-  To be completed.
-
   ### Document Metadata
 
   In the `rtc-glue` library we use document level `<meta>` tags to provide
@@ -147,6 +134,19 @@ var sources;
   roles (e.g. student/teacher, consultant/customer, etc).  By specifying the
   `rtc-role` metadata you this role information will be announced as part
   of the `rtc-quickconnect` initialization.
+
+  ## Reference
+
+  ### Element Attributes
+
+  #### rtc-capture
+
+  The presence of the `rtc-capture` attribute in a `video` or `audio` element
+  indicates that it is a getUserMedia capture target.
+
+  #### rtc-peer
+
+  To be completed.
 
 **/
 var glue = module.exports = function(scope, opts) {
