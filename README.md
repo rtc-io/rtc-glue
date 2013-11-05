@@ -180,6 +180,22 @@ Handle the initialization of a rtc-remote target
 
 Handle the initialization of an rtc-capture target
 
+## Events
+
+Glue uses [eve](https://github.com/adobe-webplatform/eve) under the hood,
+and exposes a simple interface to eve events through the `glue.events`
+interface.
+
+If using eve directly these events are namespaced with the prefix of
+`glue.` to avoid event name clashes on the bus, but you can use the
+`glue.events` endpoint to attach to eve without the namespace if you prefer.
+
+For example:
+
+```
+ERROR: could not find: 
+```
+
 ### SessionManager
 
 The SessionManager class assists with interacting with the signalling
