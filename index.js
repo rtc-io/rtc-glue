@@ -36,10 +36,6 @@ var SessionManager = require('./sessionmanager');
 var sessionMgr;
 var sources;
 
-// initialise the autoloaded flag
-var autoloaded = false;
-
-
 /**
   # rtc-glue
 
@@ -199,19 +195,12 @@ glue.config = config;
 // autoload glue
 if (typeof window != 'undefined') {
   on('load', window, function() {
-    // if we have already autoloaded, abort
-    if (autoloaded) {
-      return;
-    }
-
     // check if we can autoload
     if (config.autoload === undefined || config.autoload) {
-      autoloaded = true;
       glue();
     }
   });
 }
-
 
 require('cog/logger').enable('*');
 
