@@ -335,6 +335,14 @@ function enableCapture(el, config) {
     // render the stream to the target element
     stream.render(el);
 
+    // capture and report errors
+    stream.on('error', function(err) {
+      console.log(
+        'Error attempting to capture media, requested constraints',
+        stream.constraints
+      );
+    });
+
     // emit a capture event through the element
     stream.on('capture', function(stream) {
       // dispatch the capture event
