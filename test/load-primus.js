@@ -2,7 +2,7 @@ var crel = require('crel');
 var eve = require('eve');
 var glue = require('..');
 var test = require('tape');
-var qsa = require('dd/qsa');
+var qsa = require('fdom/qsa');
 
 function getPrimusCount() {
   var scripts = [].slice.call(document.getElementsByTagName('script'));

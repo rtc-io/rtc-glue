@@ -9,8 +9,8 @@
 var async = require('async');
 var url = require('url');
 var eve = require('eve');
-var qsa = require('dd/qsa');
-var on = require('dd/on');
+var qsa = require('fdom/qsa');
+var on = require('fdom/on');
 var extend = require('cog/extend');
 var defaults = require('cog/defaults');
 var logger = require('cog/logger')('glue');
@@ -27,7 +27,7 @@ var canGetSources = typeof MediaStreamTrack != 'undefined' &&
   MediaStreamTrack.getSources;
 
 // initialise our config (using rtc- named metadata tags)
-var config = defaults({}, require('dd/meta')(/^rtc-(.*)$/), {
+var config = defaults({}, require('fdom/meta')(/^rtc-(.*)$/), {
   room: location.hash.slice(1),
   signalhost: location.origin || 'http://rtcjs.io:50000'
 });
