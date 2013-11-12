@@ -29,7 +29,8 @@ var canGetSources = typeof MediaStreamTrack != 'undefined' &&
 // initialise our config (using rtc- named metadata tags)
 var config = defaults({}, require('fdom/meta')(/^rtc-(.*)$/), {
   room: location.hash.slice(1),
-  signalhost: location.origin || 'http://rtcjs.io:50000'
+  signalhost: location.origin || 'http://rtcjs.io:50000',
+  multiplex: true
 });
 
 var SessionManager = require('./sessionmanager');
@@ -293,7 +294,7 @@ function initPeer(el) {
 
   Handle the initialization of an rtc-capture target
 **/
-function initCapture(el) {
+function initCapture(el, sourceIdx) {
   // read the capture instructions
   var configText = el.getAttribute('rtc-capture') || '';
   var res = el.getAttribute('rtc-resolution') || el.getAttribute('rtc-res');
@@ -314,9 +315,14 @@ function initCapture(el) {
   el.capture(function(stream) {
     // broadcast the stream through the session manager
     if (sessionMgr) {
-      sessionMgr.broadcast(stream, { name: el.id });
+      sessionMgr.broadcast(stream, {
+        name: el.id,
+        sourceIdx: sourceIdx
+      });
     }
   });
+
+  return el;
 }
 
 /** internal helpers */

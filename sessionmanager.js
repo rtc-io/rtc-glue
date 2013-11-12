@@ -28,6 +28,10 @@ function SessionManager(config) {
   // save the config
   this.cfg = config;
 
+  // initialise the multiplex setting
+  this.multiplex = (config || {}).multiplex;
+  this.multiplex = this.multiplex == undefined || this.multiplex;
+
   // initialise our peers list
   this.peers = {};
 
@@ -67,12 +71,22 @@ SessionManager.prototype.announce = function(targetId) {
 SessionManager.prototype.broadcast = function(stream, data) {
   var peers = this.peers;
   var mgr = this;
+  var sourceIdx = (data || {}).sourceIdx;
 
   function connectPeer(peer, peerId) {
+    var connectionIdx = mgr.multiplex ? sourceIdx : 0;
+    var conn = peer.connections[connectionIdx];
+
+    // tag the stream
     mgr.tagStream(stream, peerId, data);
 
+    // create the connection if required
+    if (! conn) {
+      conn = peer.connections[connectionIdx] = mgr._connect(data, connectionIdx);
+    }
+
     try {
-      peer.addStream(stream);
+      conn.addStream(stream);
     }
     catch (e) {
       logger('captured error attempting to add stream: ', e);
@@ -162,18 +176,10 @@ SessionManager.prototype._bindEvents = function(signaller) {
       return logger('known peer');
     }
 
-    // create our peer connection
-    peer = mgr.peers[data.id] = rtc.createConnection();
+    // register our peer
+    peer = mgr.peers[data.id] = extend({ connections: [] }, data);
 
-    // couple the connections
-    monitor = rtc.couple(peer, { id: data.id }, signaller);
-
-    // wait for the monitor to tell us we have an active connection
-    // before attempting to bind to any UI elements
-    monitor.once('active', function() {
-      eve('glue.peer.active.' + (data.role || 'none'), null, peer, data.id);
-    });
-
+    // trigger the join notification
     eve('glue.peer.join.' + (data.role || 'none'), null, peer, data.id);
 
     // introduce ourself to the new peer
@@ -186,7 +192,12 @@ SessionManager.prototype._bindEvents = function(signaller) {
 
     // if this is a peer we know about, then close and send a notification
     if (peer) {
-      peer.close();
+      // close the connections
+      peer.connections.forEach(function(conn) {
+        conn.close();
+      });
+
+      // reset the peer data
       mgr.peers[id] = undefined;
 
       // trigger the notification
@@ -200,3 +211,23 @@ SessionManager.prototype._bindEvents = function(signaller) {
     eve('glue.streamdata.' + data.id, null, data);
   });
 };
+
+SessionManager.prototype._connect = function(data, connectionIdx) {
+  // create the connection
+  var pc = rtc.createConnection();
+
+  // create the monitor
+  var monitor = rtc.couple(
+    pc,
+    { id: data.id },
+    this.signaller,
+    { connectionIdx: connectionIdx, maxAttempts: 1 }
+  );
+
+  // when the connection is active, trigger the active state
+  monitor.once('active', function() {
+    eve('glue.peer.active.' + (data.role || 'none'), null, pc, data.id, data);
+  });
+
+  return pc;
+}
