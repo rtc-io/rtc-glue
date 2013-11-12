@@ -34,7 +34,8 @@
     "eve": "~0.4.1",
     "async": "~0.2.9",
     "rtc-core": "~0.5.0",
-    "fdom": "~0.6.1"
+    "fdom": "~0.6.1",
+    "rtc-signaller": "~0.5.0"
   },
   "testling": {
     "files": "test/all.js",

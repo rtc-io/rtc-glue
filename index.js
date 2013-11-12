@@ -380,34 +380,5 @@ function generateRoomName() {
 }
 
 function loadPrimus(callback) {
-  var script;
-  var baseUrl = config.signalhost.replace(reTrailingSlash, '');
-  var basePath = url.parse(config.signalhost).pathname;
-  var scriptSrc = baseUrl + '/rtc.io/primus.js';
-
-  // look for the script first
-  script = document.querySelector('script[src="' + scriptSrc + '"]');
-
-  // if we found, the script trigger the callback immediately
-  if (script) {
-    return callback();
-  }
-
-  // otherwise create the script and load primus
-  script = document.createElement('script');
-  script.src = scriptSrc;
-
-  logger('attempting to load primus from: ' + scriptSrc);
-  document.body.appendChild(script);
-
-  on('load', script, function() {
-    // if we have a signalhost that is not basepathed at /
-    // then tweak the primus prototype
-    if (basePath !== '/') {
-      Primus.prototype.pathname = basePath.replace(reTrailingSlash, '') +
-        Primus.prototype.pathname;
-    }
-
-    callback();
-  });
+  return signaller.loadPrimus(config.signalhost, callback);
 }
