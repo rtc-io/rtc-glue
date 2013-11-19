@@ -68,6 +68,7 @@ signalling:
 ```html
 <html>
 <head>
+<!-- configure the signalling to use the test rtc.io public signaller -->
 <meta name="rtc-signalhost" content="http://sig.rtc.io:50000">
 <style>
 video {
