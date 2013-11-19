@@ -1,4 +1,17 @@
 <html>
+<head>
+<meta name="rtc-signalhost" content="http://sig.rtc.io:50000">
+<style>
+video {
+  max-width: 640px;
+}
+
+video[rtc-capture] {
+  max-width: 240px;
+  float: right;
+}
+</style>
+</head>
 <body>
 <!-- video for our local capture -->
 <video id="main" rtc-capture="camera"></video>
