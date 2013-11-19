@@ -5,7 +5,7 @@
 var eve = require('eve');
 var rtc = require('rtc');
 var logger = require('cog/logger')('glue-sessionmanager');
-var createSignaller = require('rtc/signaller');
+var createSignaller = require('rtc-signaller');
 var extend = require('cog/extend');
 
 /**
