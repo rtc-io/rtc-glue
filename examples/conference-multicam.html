@@ -1,10 +1,13 @@
 <html>
-<meta name="rtc-signalhost" content="http://localhost:3000">
+<head>
+<!-- configure the signalling to use the test rtc.io public signaller -->
+<meta name="rtc-signalhost" content="http://sig.rtc.io:50000">
 <style type="text/css">
 video {
   max-width: 320px;
 }
 </style>
+</head>
 <body>
 <!-- video for our local capture -->
 <video id="main" rtc-capture="camera:0"></video>
