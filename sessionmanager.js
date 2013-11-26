@@ -46,6 +46,7 @@ function SessionManager(config) {
 
   // hook up signaller events
   this._bindEvents(this.signaller);
+  logger('created session manager, multiplexing = ' + this.multiplex);
 }
 
 module.exports = SessionManager;
@@ -82,6 +83,7 @@ SessionManager.prototype.broadcast = function(stream, data) {
 
     // create the connection if required
     if (! conn) {
+      logger('coupling connection ' + connectionIdx, data);
       conn = peer.connections[connectionIdx] = mgr._connect(data, connectionIdx);
     }
 
