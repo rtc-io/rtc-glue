@@ -41,7 +41,7 @@ function SessionManager(config) {
   this.signaller = createSignaller(this.socket);
 
   // hook up signaller events
-  this._bindEvents(this.signaller);
+  this._bindEvents(this.signaller, config);
 }
 
 module.exports = SessionManager;
@@ -140,7 +140,7 @@ SessionManager.prototype.tagStream = function(stream, targetId, data) {
 
 /* internal methods */
 
-SessionManager.prototype._bindEvents = function(signaller) {
+SessionManager.prototype._bindEvents = function(signaller, opts) {
   var mgr = this;
 
   // TODO: extract the meaningful parts from the config
@@ -166,7 +166,7 @@ SessionManager.prototype._bindEvents = function(signaller) {
     peer = mgr.peers[data.id] = rtc.createConnection();
 
     // couple the connections
-    monitor = rtc.couple(peer, { id: data.id }, signaller);
+    monitor = rtc.couple(peer, { id: data.id }, signaller, opts);
 
     // wait for the monitor to tell us we have an active connection
     // before attempting to bind to any UI elements
