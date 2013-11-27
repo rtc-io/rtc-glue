@@ -1,6 +1,6 @@
 {
   "name": "rtc-glue",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "A simple library for writing WebRTC applications an in HTML-centric way",
   "main": "index.js",
   "scripts": {
