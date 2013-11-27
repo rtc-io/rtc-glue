@@ -13,7 +13,8 @@ var qsa = require('fdom/qsa');
 var on = require('fdom/on');
 var extend = require('cog/extend');
 var defaults = require('cog/defaults');
-var logger = require('cog/logger')('glue');
+var logger = require('cog/logger');
+var debug = logger('glue');
 var signaller = require('rtc-signaller');
 var media = require('rtc-media');
 var captureConfig = require('rtc-captureconfig');
@@ -150,6 +151,7 @@ var sources;
 **/
 var glue = module.exports = function(scope, opts) {
   var startupOps = [];
+  var debugTarget;
 
   // initialise the remote elements
   var peers = qsa('*[rtc-peer]', scope).map(initPeer);
@@ -162,10 +164,24 @@ var glue = module.exports = function(scope, opts) {
   // apply any external opts to the configuration
   extend(config, opts);
 
+  // determine if we are debugging
+  debugTarget = (config || {}).debug;
+  if (debugTarget) {
+    if (debugTarget === true) {
+      logger.enable('*');
+    }
+    else if (Array.isArray(debugTarget)) {
+      logger.enable.apply(logger, debugTarget);
+    }
+    else {
+      logger.enable(debugTarget);
+    }
+  }
+
   // run the startup operations
   async.parallel(startupOps, function(err) {
     // TODO: check errors
-    logger('startup ops completed, starting glue', config);
+    debug('startup ops completed, starting glue', config);
     eve('glue.ready');
 
     // if we don't have a room name, generate a room name
@@ -202,8 +218,6 @@ if (typeof window != 'undefined') {
   });
 }
 
-require('cog/logger').enable('*');
-
 /**
   ### Internal Functions
 **/
@@ -222,7 +236,7 @@ function initPeer(el) {
   var data = el._rtc || (el._rtc = {});
 
   function attachStream(stream) {
-    logger('attaching stream');
+    debug('attaching stream');
     media(stream).render(el);
     data.streamId = stream.id;
   }
@@ -235,9 +249,9 @@ function initPeer(el) {
 
     // if we have a particular target stream, then go looking for it
     if (targetStream) {
-      logger('requesting stream data');
+      debug('requesting stream data');
       sessionMgr.getStreamData(stream, function(data) {
-        logger('got stream data', data);
+        debug('got stream data', data);
 
         // if it's a match, then attach
         if (data && data.name === targetStream) {
@@ -259,7 +273,7 @@ function initPeer(el) {
         return;
       }
 
-      logger('peer active', peer.getRemoteStreams());
+      debug('peer active', peer.getRemoteStreams());
 
       // associate the peer id with the element
       data.peerId = peerId;

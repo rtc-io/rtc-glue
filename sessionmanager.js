@@ -4,7 +4,7 @@
 
 var eve = require('eve');
 var rtc = require('rtc');
-var logger = require('cog/logger')('glue-sessionmanager');
+var debug = require('cog/logger')('glue-sessionmanager');
 var createSignaller = require('rtc-signaller');
 var extend = require('cog/extend');
 
@@ -54,7 +54,7 @@ module.exports = SessionManager;
 SessionManager.prototype.announce = function(targetId) {
   var scope = targetId ? this.signaller.to(targetId) : this.signaller;
 
-  logger('announcing self to: ' + (targetId || 'all'));
+  debug('announcing self to: ' + (targetId || 'all'));
   scope.announce({ room: this.room, role: this.role });
 };
 
@@ -75,7 +75,7 @@ SessionManager.prototype.broadcast = function(stream, data) {
       peer.addStream(stream);
     }
     catch (e) {
-      logger('captured error attempting to add stream: ', e);
+      debug('captured error attempting to add stream: ', e);
     }
   }
 
@@ -145,7 +145,7 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
 
   // TODO: extract the meaningful parts from the config
   // var opts = this.cfg;
-  logger('initializing event handlers');
+  debug('initializing event handlers');
 
   signaller.on('announce', function(data) {
     var ns = 'glue.peer.join.' + (data.role || 'none')
@@ -154,12 +154,13 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
 
     // if the room does not match our room
     // OR, we already have an active peer for that id, then abort
+    debug('captured announce event for peer: ' + data.id);
     if (data.room !== mgr.room) {
-      return logger('received announce for incorrect room');
+      return debug('received announce for incorrect room');
     }
 
     if (mgr.peers[data.id]) {
-      return logger('known peer');
+      return debug('known peer');
     }
 
     // create our peer connection
@@ -186,6 +187,7 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
   signaller.on('leave', function(id) {
     // get the peer
     var peer = mgr.peers[id];
+    debug('captured leave event for peer: ' + id);
 
     // if this is a peer we know about, then close and send a notification
     if (peer) {
