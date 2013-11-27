@@ -45,7 +45,7 @@ function SessionManager(config) {
   this.signaller = createSignaller(this.socket);
 
   // hook up signaller events
-  this._bindEvents(this.signaller);
+  this._bindEvents(this.signaller, config);
   logger('created session manager, multiplexing = ' + this.multiplex);
 }
 
@@ -156,7 +156,7 @@ SessionManager.prototype.tagStream = function(stream, targetId, data) {
 
 /* internal methods */
 
-SessionManager.prototype._bindEvents = function(signaller) {
+SessionManager.prototype._bindEvents = function(signaller, opts) {
   var mgr = this;
 
   // TODO: extract the meaningful parts from the config
@@ -216,7 +216,7 @@ SessionManager.prototype._bindEvents = function(signaller) {
 
 SessionManager.prototype._connect = function(data, connectionIdx) {
   // create the connection
-  var pc = rtc.createConnection();
+  var pc = rtc.createConnection(this.cfg, this.cfg.constraints);
 
   // create the monitor
   var monitor = rtc.couple(
