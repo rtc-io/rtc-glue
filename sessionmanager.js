@@ -163,7 +163,7 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
     }
 
     // create our peer connection
-    peer = mgr.peers[data.id] = rtc.createConnection();
+    peer = mgr.peers[data.id] = rtc.createConnection(opts, opts.constraints);
 
     // couple the connections
     monitor = rtc.couple(peer, { id: data.id }, signaller, opts);
