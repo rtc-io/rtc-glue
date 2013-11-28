@@ -3,10 +3,12 @@
 'use strict';
 
 var eve = require('eve');
+var EventEmitter = require('events').EventEmitter;
 var rtc = require('rtc');
 var debug = require('cog/logger')('glue-sessionmanager');
 var createSignaller = require('rtc-signaller');
 var extend = require('cog/extend');
+var util = require('util');
 
 /**
   ### SessionManager
@@ -20,6 +22,8 @@ function SessionManager(config) {
   if (! (this instanceof SessionManager)) {
     return new SessionManager(config);
   }
+
+  EventEmitter.call(this);
 
   // initialise the room and our role
   this.room = config.room;
@@ -36,6 +40,7 @@ function SessionManager(config) {
 
   // create our underlying socket connection
   this.socket = new Primus(config.signalhost);
+  this.socket.on('open', this.emit.bind(this, 'active'));
 
   // create our signalling interface
   this.signaller = createSignaller(this.socket);
@@ -45,6 +50,7 @@ function SessionManager(config) {
 }
 
 module.exports = SessionManager;
+util.inherits(SessionManager, EventEmitter);
 
 /**
   #### announce()

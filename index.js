@@ -192,12 +192,18 @@ var glue = module.exports = function(scope, opts) {
     // create the session manager
     sessionMgr = typeof Primus != 'undefined' && new SessionManager(config);
 
-    // initialise the capture elements
-    qsa('*[rtc-capture]', scope).forEach(initCapture);
+    if (sessionMgr) {
+      sessionMgr.once('active', function() {
+        qsa('*[rtc-capture]', scope).forEach(initCapture);
 
-    // if we have any peers, then announce ourselves via the session manager
-    if (peers.length > 0) {
-      sessionMgr.announce();
+        // if we have any peers, then announce ourselves via the session manager
+        if (peers.length > 0) {
+          sessionMgr.announce();
+        }
+      });
+    }
+    else {
+      qsa('*[rtc-capture]', scope).forEach(initCapture);
     }
   });
 };
