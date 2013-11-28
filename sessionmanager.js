@@ -80,14 +80,20 @@ SessionManager.prototype.broadcast = function(stream, data) {
   }
 
   // add to existing streams
+  debug('broadcasting stream ' + stream.id + ' to existing peers');
   Object.keys(peers).forEach(function(peerId) {
     if (peers[peerId]) {
+      debug('broadcasting to peer: ' + peerId);
       connectPeer(peers[peerId], peerId);
     }
   });
 
   // when a new peer arrives, add it to that peer also
-  eve.on('glue.peer.join', connectPeer);
+  eve.on('glue.peer.join', function(peer, peerId) {
+    debug('peer ' + peerId + ' joined, connecting to stream: ' + stream.id);
+
+    connectPeer(peer, peerId);
+  });
 
   // when the stream ends disconnect the listener
   // TODO: use addEventListener once supported
