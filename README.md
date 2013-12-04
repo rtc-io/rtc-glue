@@ -7,9 +7,6 @@ their time in HTML and CSS rather than JS.
 
 [![NPM](https://nodei.co/npm/rtc-glue.png)](https://nodei.co/npm/rtc-glue/)
 
-
-[![browser support](https://ci.testling.com/rtc-io/rtc-glue.png)](https://ci.testling.com/rtc-io/rtc-glue)
-
 [![unstable](http://hughsk.github.io/stability-badges/dist/unstable.svg)](http://github.com/hughsk/stability-badges)
 
 ## Example Usage
