@@ -30,12 +30,14 @@ var canGetSources = typeof MediaStreamTrack != 'undefined' &&
 // initialise our config (using rtc- named metadata tags)
 var config = defaults({}, require('fdom/meta')(/^rtc-(.*)$/), {
   room: location.hash.slice(1),
-  signalhost: location.origin || 'http://rtcjs.io:50000'
+  signalhost: location.origin || 'http://sig.rtc.io:50000'
 });
 
 var SessionManager = require('./sessionmanager');
 var sessionMgr;
 var sources;
+
+require('cog/logger').enable('*');
 
 /**
   # rtc-glue
