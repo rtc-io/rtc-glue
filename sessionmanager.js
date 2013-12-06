@@ -159,7 +159,7 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
   // var opts = this.cfg;
   debug('initializing event handlers');
 
-  signaller.on('announce', function(data) {
+  signaller.on('peer:announce', function(data) {
     var ns = 'glue.peer.join.' + (data.role || 'none')
     var peer;
     var monitor;
@@ -182,7 +182,7 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
     );
 
     // couple the connections
-    monitor = rtc.couple(peer, { id: data.id }, signaller, opts);
+    monitor = rtc.couple(peer, data.id, signaller, opts);
 
     // wait for the monitor to tell us we have an active connection
     // before attempting to bind to any UI elements
@@ -191,12 +191,11 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
     });
 
     eve('glue.peer.join.' + (data.role || 'none'), null, peer, data.id);
-
-    // introduce ourself to the new peer
-    mgr.announce(data.id);
   });
 
-  signaller.on('leave', function(id) {
+  signaller.on('peer:leave', function(id) {
+    console.log(arguments);
+
     // get the peer
     var peer = mgr.peers[id];
     debug('captured leave event for peer: ' + id);
@@ -211,7 +210,7 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
     }
   });
 
-  signaller.on('streamdata', function(data) {
+  signaller.on('streamdata', function(src, data) {
     // save the stream data to the local stream
     mgr.streams[data.id] = data;
     eve('glue.streamdata.' + data.id, null, data);
