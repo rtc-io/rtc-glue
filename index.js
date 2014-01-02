@@ -37,8 +37,6 @@ var SessionManager = require('./sessionmanager');
 var sessionMgr;
 var sources;
 
-require('cog/logger').enable('*');
-
 /**
   # rtc-glue
 
@@ -202,6 +200,9 @@ var glue = module.exports = function(scope, opts) {
         if (peers.length > 0) {
           sessionMgr.announce();
         }
+
+        // trigger a glue session active event
+        eve('glue.connected', null, sessionMgr.signaller, sessionMgr);
       });
     }
     else {
