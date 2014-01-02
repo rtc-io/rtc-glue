@@ -66,7 +66,7 @@ signalling:
 <html>
 <head>
 <!-- configure the signalling to use the test rtc.io public signaller -->
-<meta name="rtc-signalhost" content="http://sig.rtc.io:50000">
+<meta name="rtc-signalhost" content="http://rtc.io/switchboard/">
 <style>
 video {
   max-width: 640px;
@@ -87,6 +87,20 @@ video[rtc-capture] {
 
 <!-- make magic happen -->
 <script src="../dist/glue.js"></script>
+<script>
+glue.events.once('connected', function(signaller) {
+	console.log('connected');
+
+	signaller.on('color', function(data) {
+		console.log('received color notification: ', arguments);
+	});
+
+	signaller.send('/color', {
+		src: signaller.id,
+		color: 'blue'
+	});
+});
+</script>
 </body>
 </html>
 ```
@@ -215,6 +229,21 @@ glue.events.once('ready', function() {
   // will also be triggered once ready, and equivalent to glue.ready
   // when directly using eve
 });
+
+// listen for connected events
+// NOTE: only trigger when a page has valid peer elements
+glue.events.once('connected', function(signaller) {
+	console.log('connected');
+
+	signaller.on('color', function(data) {
+		console.log('received color notification: ', arguments);
+	});
+
+	signaller.send('/color', {
+		src: signaller.id,
+		color: 'blue'
+	});
+});
 ```
 
 ### SessionManager
@@ -247,7 +276,7 @@ element is expecting the contents of a particular capture target.
 
 ### Apache 2.0
 
-Copyright 2013 National ICT Australia Limited (NICTA)
+Copyright 2014 National ICT Australia Limited (NICTA)
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
