@@ -194,8 +194,6 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
   });
 
   signaller.on('peer:leave', function(id) {
-    console.log(arguments);
-
     // get the peer
     var peer = mgr.peers[id];
     debug('captured leave event for peer: ' + id);
