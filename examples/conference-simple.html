@@ -27,7 +27,7 @@ glue.events.once('connected', function(signaller) {
 	console.log('connected');
 
 	signaller.on('color', function(data) {
-		console.log('received color notification: ', arguments);
+		console.log('received color notification: ', data);
 	});
 
 	signaller.send('/color', {
