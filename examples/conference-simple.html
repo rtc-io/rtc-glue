@@ -22,5 +22,19 @@ video[rtc-capture] {
 
 <!-- make magic happen -->
 <script src="../dist/glue.js"></script>
+<script>
+glue.events.once('connected', function(signaller) {
+	console.log('connected');
+
+	signaller.on('color', function(data) {
+		console.log('received color notification: ', arguments);
+	});
+
+	signaller.send('/color', {
+		src: signaller.id,
+		color: 'blue'
+	});
+});
+</script>
 </body>
 </html>
