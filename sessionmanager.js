@@ -208,7 +208,7 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
     }
   });
 
-  signaller.on('streamdata', function(src, data) {
+  signaller.on('streamdata', function(data, src) {
     // save the stream data to the local stream
     mgr.streams[data.id] = data;
     eve('glue.streamdata.' + data.id, null, data);
