@@ -35,7 +35,7 @@
     "async": "~0.2.9",
     "rtc-core": "~0.7.1",
     "fdom": "~0.6.1",
-    "rtc-signaller": "~0.14.0",
+    "rtc-signaller": "~0.15.0",
     "rtc-media": "~1.5.0"
   },
   "testling": {
