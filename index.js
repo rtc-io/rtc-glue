@@ -37,6 +37,8 @@ var SessionManager = require('./sessionmanager');
 var sessionMgr;
 var sources;
 
+logger.enable('*');
+
 /**
   # rtc-glue
 
@@ -180,6 +182,8 @@ var glue = module.exports = function(scope, opts) {
 
   // run the startup operations
   async.parallel(startupOps, function(err) {
+    var captureTags = qsa('*[rtc-capture]', scope);
+
     // TODO: check errors
     debug('startup ops completed, starting glue', config);
     eve('glue.ready');
@@ -193,8 +197,12 @@ var glue = module.exports = function(scope, opts) {
     sessionMgr = typeof Primus != 'undefined' && new SessionManager(config);
 
     if (sessionMgr) {
+      // tell the session manager how many capture sources we have
+      sessionMgr.streamCount = captureTags.length;
+
+      // wait until active
       sessionMgr.once('active', function() {
-        qsa('*[rtc-capture]', scope).forEach(initCapture);
+        captureTags.forEach(initCapture);
 
         // if we have any peers, then announce ourselves via the session manager
         if (peers.length > 0) {
@@ -206,7 +214,7 @@ var glue = module.exports = function(scope, opts) {
       });
     }
     else {
-      qsa('*[rtc-capture]', scope).forEach(initCapture);
+      captureTags.forEach(initCapture);
     }
   });
 };
@@ -290,10 +298,12 @@ function initPeer(el) {
       // add existing streams
       [].slice.call(peer.getRemoteStreams()).forEach(addStream);
 
-      // listen for add straem events
-      peer.addEventListener('addstream', function(evt) {
-        addStream(evt.stream, peer);
-      });
+      // listen for add stream events
+      // NOTE: currently not in use as we have move to a non-reactive
+      // coupling approach to ensure firefox compatibility
+      // peer.addEventListener('addstream', function(evt) {
+      //   addStream(evt.stream, peer);
+      // });
     });
   });
 
