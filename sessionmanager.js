@@ -38,6 +38,10 @@ function SessionManager(config) {
   // initialise the streams data list
   this.streams = {};
 
+  // initialise the session manager to expect at least one stream
+  this.streamCount = 1;
+  this.streamReadyCount = 0;
+
   // create our underlying socket connection
   this.socket = new Primus(config.signalhost);
   this.socket.on('open', this.emit.bind(this, 'active'));
@@ -83,7 +87,17 @@ SessionManager.prototype.broadcast = function(stream, data) {
     catch (e) {
       debug('captured error attempting to add stream: ', e);
     }
+
+    // if the streams ready === the stream count then connect
+    debug('checking stream ready count ok: ', mgr.streamReadyCount === mgr.streamCount, mgr.streamCount, mgr.streamReadyCount);
+    if (mgr.streamReadyCount === mgr.streamCount) {
+      mgr._sendReady(peerId);
+      mgr._connectWhenReady(peerId);
+    }
   }
+
+  // increment the stream ready count
+  this.streamReadyCount += 1;
 
   // add to existing streams
   debug('broadcasting stream ' + stream.id + ' to existing peers');
@@ -159,6 +173,16 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
   // var opts = this.cfg;
   debug('initializing event handlers');
 
+  // when we get a ready message, flag that the peer that sent that
+  // message is ready to connect
+  signaller.on('peer:ready', function(srcData) {
+    // flag the peer as ready
+    (mgr.peers[srcData && srcData.id] || {})._ready = true;
+
+    // connect when ready
+    mgr._connectWhenReady(srcData.id);
+  });
+
   signaller.on('peer:announce', function(data) {
     var ns = 'glue.peer.join.' + (data.role || 'none')
     var peer;
@@ -181,16 +205,15 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
       opts.constraints
     );
 
-    // couple the connections
-    monitor = rtc.couple(peer, data.id, signaller, opts);
+    // initialise the peer ready flag as false
+    peer._ready = false;
 
-    // wait for the monitor to tell us we have an active connection
-    // before attempting to bind to any UI elements
-    monitor.once('active', function() {
-      eve('glue.peer.active.' + (data.role || 'none'), null, peer, data.id);
-    });
+    // tag the peer with the announce role
+    peer._role = data.role || 'none';
 
-    eve('glue.peer.join.' + (data.role || 'none'), null, peer, data.id);
+    // if we are ready, then 
+
+    eve('glue.peer.join.' + peer._role, null, peer, data.id);
   });
 
   signaller.on('peer:leave', function(id) {
@@ -213,4 +236,39 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
     mgr.streams[data.id] = data;
     eve('glue.streamdata.' + data.id, null, data);
   });
+};
+
+SessionManager.prototype._connectWhenReady = function(peerId) {
+  var peer = this.peers[peerId];
+  var monitor;
+
+  if (peer && peer._ready && this.streamReadyCount === this.streamCount) {
+    // couple the connections
+    monitor = rtc.couple(peer, peerId, this.signaller, this.cfg);
+
+    // wait for the monitor to tell us we have an active connection
+    // before attempting to bind to any UI elements
+    monitor.once('active', function() {
+      eve('glue.peer.active.' + peer._role, null, peer, peerId);
+    });
+
+    // if we are the master, then create the offer
+    if (this.signaller.isMaster(peerId)) {
+      monitor.createOffer();
+    }
+  }
+
+  return monitor;
+};
+
+SessionManager.prototype._sendReady = function(peerId) {
+  var peer = this.peers[peerId];
+
+  // if this is an unknown peer, then abort
+  if (! peer) {
+    return;
+  }
+
+  // send the ready flag
+  this.signaller.to(peerId).send('/peer:ready');
 };
