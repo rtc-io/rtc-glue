@@ -1,5 +1,6 @@
-MODULE_NAME=glue
-REQUIRED_TOOLS=browserify uglifyjs st inotifywait
+MODULE_NAME := glue
+REQUIRED_TOOLS := browserify uglifyjs st inotifywait
+PORT ?= 8000
 
 PHONY: dist
 
@@ -16,6 +17,6 @@ dist: $(REQUIRED_TOOLS)
 	@uglifyjs dist/$(MODULE_NAME).js > dist/$(MODULE_NAME).min.js 2>/dev/null
 
 devmode: dist
-	st --port 8000 --no-cache &
+	st --port $(PORT) --no-cache &
 
 	while true; do inotifywait -e create -e delete -e modify -q -r *.js node_modules || make dist; done
