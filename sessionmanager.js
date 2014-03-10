@@ -39,7 +39,7 @@ function SessionManager(config) {
   this.streams = {};
 
   // initialise the session manager to expect at least one stream
-  this.streamCount = config.streamcount;
+  this.streamCount = 1;
   this.streamReadyCount = 0;
 
   // create our underlying socket connection

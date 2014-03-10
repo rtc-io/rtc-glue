@@ -31,8 +31,7 @@ var canGetSources = typeof MediaStreamTrack != 'undefined' &&
 // initialise our config (using rtc- named metadata tags)
 var config = defaults({}, require('fdom/meta')(/^rtc-(.*)$/), {
   room: location.hash.slice(1),
-  signalhost: location.origin || 'http://rtc.io/switchboard/',
-  streamcount: 1
+  signalhost: location.origin || 'http://rtc.io/switchboard/'
 });
 
 var SessionManager = require('./sessionmanager');
@@ -143,6 +142,22 @@ var SELECTOR_DC = 'meta[name="rtc-data"],meta[name="rtc-channel"]';
   roles (e.g. student/teacher, consultant/customer, etc).  By specifying the
   `rtc-role` metadata you this role information will be announced as part
   of the `rtc-quickconnect` initialization.
+
+  #### rtc-data
+
+  From version `0.9` of glue you can also specify one or more `rtc-data` meta
+  tags that are used to specify data channels that you want configured for
+  your application.  When a connection is established between peers, the 
+  connections are created with the appropriate data channels.
+
+  When the data channel is open and available for communication a
+  `<channelname>:open` glue event is triggered (consistent with the behaviour
+  of the [rtc-quickconnect](https://github.com/rtc-io/rtc-quickconnect))
+  module.
+
+  An example of using data channels is shown below:
+
+  <<< examples/datachannel-events.html
 
   ## Reference
 
