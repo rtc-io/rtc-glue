@@ -182,6 +182,40 @@ roles (e.g. student/teacher, consultant/customer, etc).  By specifying the
 `rtc-role` metadata you this role information will be announced as part
 of the `rtc-quickconnect` initialization.
 
+#### rtc-data
+
+From version `0.9` of glue you can also specify one or more `rtc-data` meta
+tags that are used to specify data channels that you want configured for
+your application.  When a connection is established between peers, the 
+connections are created with the appropriate data channels.
+
+When the data channel is open and available for communication a
+`<channelname>:open` glue event is triggered (consistent with the behaviour
+of the [rtc-quickconnect](https://github.com/rtc-io/rtc-quickconnect))
+module.
+
+An example of using data channels is shown below:
+
+```html
+<html>
+<head>
+<!-- configure the signalling to use the test rtc.io public signaller -->
+<meta name="rtc-signalhost" content="http://rtc.io/switchboard/">
+
+<!-- tell glue that we want a data channel named "test" -->
+<meta name="rtc-data" content="test">
+</head>
+<body>
+<script src="../dist/glue.js"></script>
+<script>
+glue.events.on('test:open', function(dc, id) {
+  console.log('data channel provided for peer: ' + id, dc);
+});
+</script>
+</body>
+</html>
+```
+
 ## Reference
 
 ### Element Attributes
