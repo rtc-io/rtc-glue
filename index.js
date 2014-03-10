@@ -37,8 +37,6 @@ var SessionManager = require('./sessionmanager');
 var sessionMgr;
 var sources;
 
-logger.enable('*');
-
 /**
   # rtc-glue
 
