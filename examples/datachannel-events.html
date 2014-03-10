@@ -1,0 +1,17 @@
+<html>
+<head>
+<!-- configure the signalling to use the test rtc.io public signaller -->
+<meta name="rtc-signalhost" content="http://rtc.io/switchboard/">
+<meta name="rtc-data" content="test">
+<meta name="rtc-streamcount" content="0">
+<!-- <meta name="rtc-debug" content="true"> -->
+</head>
+<body>
+<script src="../dist/glue.js"></script>
+<script>
+glue.events.on('test:open', function(dc, id) {
+  console.log('data channel provided for peer: ' + id, dc);
+});
+</script>
+</body>
+</html>

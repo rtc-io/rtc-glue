@@ -24,13 +24,15 @@ var resetEl = require('rtc-core/reset');
 
 var reSep = /[\s\,]\s*/;
 var reTrailingSlash = /\/$/;
+var reSemiColonDelim = /\;\s*/;
 var canGetSources = typeof MediaStreamTrack != 'undefined' &&
   MediaStreamTrack.getSources;
 
 // initialise our config (using rtc- named metadata tags)
 var config = defaults({}, require('fdom/meta')(/^rtc-(.*)$/), {
   room: location.hash.slice(1),
-  signalhost: location.origin || 'http://rtc.io/switchboard/'
+  signalhost: location.origin || 'http://rtc.io/switchboard/',
+  streamcount: 1
 });
 
 var SessionManager = require('./sessionmanager');
@@ -40,6 +42,9 @@ var SessionManager = require('./sessionmanager');
 // this may change in the future...
 var sessionMgr;
 var sources;
+
+// initialise some query selectors
+var SELECTOR_DC = 'meta[name="rtc-data"],meta[name="rtc-channel"]';
 
 /**
   # rtc-glue
@@ -156,17 +161,18 @@ var sources;
 var glue = module.exports = function(scope, opts) {
   var startupOps = [];
   var debugTarget;
+  var channels = qsa(SELECTOR_DC).map(readChannelConfig);
 
   // initialise the remote elements
   var peers = qsa('*[rtc-peer]', scope).map(initPeer);
 
   // if we have peers, then we are going to need primus
-  if (peers.length > 0) {
+  if (peers.length > 0 || channels.length > 0) {
     startupOps.push(loadPrimus);
   }
 
   // apply any external opts to the configuration
-  extend(config, opts);
+  extend(config, { channels: channels }, opts);
 
   // determine if we are debugging
   debugTarget = (config || {}).debug;
@@ -207,7 +213,7 @@ var glue = module.exports = function(scope, opts) {
         captureTags.forEach(initCapture);
 
         // if we have any peers, then announce ourselves via the session manager
-        if (peers.length > 0) {
+        if (peers.length > 0 || channels.length > 0) {
           sessionMgr.announce();
         }
 
@@ -240,6 +246,15 @@ if (typeof window != 'undefined') {
 /**
   ### Internal Functions
 **/
+
+function readChannelConfig(el) {
+  var content = (el || {}).content || '';
+  var params = content.split(reSemiColonDelim);
+
+  return {
+    name: params[0]
+  };
+}
 
 /**
   #### initPeer(el)

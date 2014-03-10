@@ -39,12 +39,15 @@ function SessionManager(config) {
   this.streams = {};
 
   // initialise the session manager to expect at least one stream
-  this.streamCount = 1;
+  this.streamCount = config.streamcount;
   this.streamReadyCount = 0;
 
   // create our underlying socket connection
   this.socket = new Primus(config.signalhost);
   this.socket.on('open', this.emit.bind(this, 'active'));
+
+  // initialise the channels configuration
+  this.channels = [].concat(config.channels || []);
 
   // create our signalling interface
   this.signaller = createSignaller(this.socket);
@@ -211,7 +214,10 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
     // tag the peer with the announce role
     peer._role = data.role || 'none';
 
-    // if we are ready, then 
+    // if we are working in a 0 streams environment, then send ready immediately
+    if (mgr.streamCount === 0) {
+      mgr._sendReady(data.id);
+    }
 
     eve('glue.peer.join.' + peer._role, null, peer, data.id);
   });
@@ -239,10 +245,19 @@ SessionManager.prototype._bindEvents = function(signaller, opts) {
 };
 
 SessionManager.prototype._connectWhenReady = function(peerId) {
+  var isMaster = this.signaller.isMaster(peerId);
   var peer = this.peers[peerId];
   var monitor;
 
   if (peer && peer._ready && this.streamReadyCount === this.streamCount) {
+    // create data channels if master
+    if (isMaster) {
+      this.channels.forEach(this._initChannel.bind(this, peerId));
+    }
+    else {
+      peer.ondatachannel = this._handleDataChannel.bind(this, peerId);
+    }
+
     // couple the connections
     monitor = rtc.couple(peer, peerId, this.signaller, this.cfg);
 
@@ -261,6 +276,31 @@ SessionManager.prototype._connectWhenReady = function(peerId) {
   return monitor;
 };
 
+SessionManager.prototype._initChannel = function(peerId, config) {
+  var peer = this.peers[peerId];
+
+  // TODO: handle more complicated args
+  return this._monitorChannel(peer.createDataChannel(config.name), peerId);
+};
+
+SessionManager.prototype._handleDataChannel = function(peerId, evt) {
+  this._monitorChannel(evt.channel, peerId);
+};
+
+SessionManager.prototype._monitorChannel = function(channel, peerId) {
+  // create the channelOpen function
+  var emitChannelOpen = function() {
+    eve('glue.' + channel.label + ':open', null, channel, peerId);
+  };
+
+  debug('channel ' + channel.label + ' discovered for peer: ' + peerId, channel);
+  if (channel.readyState === 'open') {
+    return emitChannelOpen();
+  }
+
+  channel.onopen = emitChannelOpen;
+};
+
 SessionManager.prototype._sendReady = function(peerId) {
   var peer = this.peers[peerId];
 
@@ -270,5 +310,6 @@ SessionManager.prototype._sendReady = function(peerId) {
   }
 
   // send the ready flag
+  debug('sending ready signal to: ' + peerId);
   this.signaller.to(peerId).send('/peer:ready');
 };
