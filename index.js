@@ -34,6 +34,10 @@ var config = defaults({}, require('fdom/meta')(/^rtc-(.*)$/), {
 });
 
 var SessionManager = require('./sessionmanager');
+
+// initialise a sessionMgr for the module instance
+// at this stage we are only supporting one glue instance "per page", but
+// this may change in the future...
 var sessionMgr;
 var sources;
 
