@@ -222,10 +222,8 @@ var glue = module.exports = function(scope, opts) {
       sessionMgr.once('active', function() {
         captureTags.forEach(initCapture);
 
-        // if we have any peers, then announce ourselves via the session manager
-        if (peers.length > 0 || channels.length > 0) {
-          sessionMgr.announce();
-        }
+        // announce ourselves
+        sessionMgr.announce();
 
         // trigger a glue session active event
         eve('glue.connected', null, sessionMgr.signaller, sessionMgr);
