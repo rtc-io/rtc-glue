@@ -263,7 +263,7 @@ SessionManager.prototype._connectWhenReady = function(peerId) {
 
     // wait for the monitor to tell us we have an active connection
     // before attempting to bind to any UI elements
-    monitor.once('active', function() {
+    monitor.once('connected', function() {
       eve('glue.peer.active.' + peer._role, null, peer, peerId);
     });
 
