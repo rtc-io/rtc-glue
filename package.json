@@ -22,20 +22,20 @@
     "url": "https://github.com/rtc-io/rtc-glue/issues"
   },
   "devDependencies": {
-    "tape": "~2.4.2",
-    "rtc-switchboard": "~0.7.2",
+    "tape": "^2.12.1",
+    "rtc-switchboard": "^0.8.2",
     "crel": "~1.1.0"
   },
   "dependencies": {
-    "rtc": "~0.15.2",
+    "rtc": "^0.16.0",
     "cog": "~0.5.1",
     "rtc-captureconfig": "~0.4.0",
     "sdp-transform": "~0.6.0",
     "eve": "~0.4.1",
-    "async": "~0.2.9",
+    "async": "^0.6.2",
     "rtc-core": "~0.7.1",
-    "fdom": "^0.7.1",
-    "rtc-signaller": "~0.18.2",
+    "fdom": "^0.8.0",
+    "rtc-signaller": "^0.19.2",
     "rtc-media": "~1.5.0"
   },
   "testling": {
