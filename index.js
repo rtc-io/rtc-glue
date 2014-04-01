@@ -174,17 +174,12 @@ var SELECTOR_DC = 'meta[name="rtc-data"],meta[name="rtc-channel"]';
 
 **/
 var glue = module.exports = function(scope, opts) {
-  var startupOps = [];
+  var startupOps = [ loadPrimus ];
   var debugTarget;
   var channels = qsa(SELECTOR_DC).map(readChannelConfig);
 
   // initialise the remote elements
   var peers = qsa('*[rtc-peer]', scope).map(initPeer);
-
-  // if we have peers, then we are going to need primus
-  if (peers.length > 0 || channels.length > 0) {
-    startupOps.push(loadPrimus);
-  }
 
   // apply any external opts to the configuration
   extend(config, { channels: channels }, opts);
