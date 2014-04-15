@@ -34,7 +34,7 @@
     "async": "^0.6.2",
     "rtc-core": "~0.7.1",
     "fdom": "^0.8.0",
-    "rtc-media": "~1.5.0"
+    "rtc-media": "^1"
   },
   "peerDependencies": {
     "rtc-quickconnect": "^1"
