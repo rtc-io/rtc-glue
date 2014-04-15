@@ -12,9 +12,7 @@ var qsa = require('fdom/qsa');
 var on = require('fdom/on');
 var extend = require('cog/extend');
 var defaults = require('cog/defaults');
-var logger = require('cog/logger');
-var debug = logger('glue');
-var signaller = require('rtc-signaller');
+var debug = require('cog/logger')('rtc-glue');
 var media = require('rtc-media');
 var captureConfig = require('rtc-captureconfig');
 var transform = require('sdp-transform');
@@ -24,10 +22,9 @@ var resetEl = require('rtc-core/reset');
 var reSep = /[\s\,]\s*/;
 var reTrailingSlash = /\/$/;
 var reSemiColonDelim = /\;\s*/;
-var canGetSources = typeof MediaStreamTrack != 'undefined' &&
-  MediaStreamTrack.getSources;
 
-var sources;
+var getSources = require('./lib/get-sources.js');
+var capture = require('./lib/capture');
 
 // initialise some query selectors
 var SELECTOR_DC = 'meta[name="rtc-data"],meta[name="rtc-channel"]';
@@ -168,29 +165,15 @@ var glue = module.exports = function(qc, opts) {
   var scope = (opts || {}).scope || document.body;
 
   // initialise the remote elements
-  var peers = qsa('*[rtc-peer]', scope).map(initPeer);
+  var peers = qsa('*[rtc-peer]', scope).map(initPeer(qc));
 
-  var captureTags = qsa('*[rtc-capture]', scope);
+  // get sources
+  getSources(function(sources) {
+    async.map(qsa('*[rtc-capture]', scope), capture(sources), function(err, streams) {
 
-  // TODO: check errors
-  debug('startup ops completed, starting glue', config);
-  eve('glue.ready');
-
-  // if we don't have a room name, generate a room name
-  if (! config.room) {
-    config.room = generateRoomName();
-  }
-};
-
-// autoload glue
-if (typeof window != 'undefined') {
-  on('load', window, function() {
-    // check if we can autoload
-    if (config.autoload === undefined || config.autoload) {
-      glue();
-    }
+    });
   });
-}
+};
 
 /**
   ### Internal Functions
@@ -205,172 +188,84 @@ function readChannelConfig(el) {
   };
 }
 
-/**
-  #### initPeer(el)
+function initPeer(qc) {
+  return function(el) {
+    var propValue = el.getAttribute('rtc-peer');
+    var targetStream = el.getAttribute('rtc-stream');
+    var peerRoles = propValue ? propValue.split(reSep) : [];
 
-  Handle the initialization of a rtc-remote target
-**/
-function initPeer(el) {
-  var propValue = el.getAttribute('rtc-peer');
-  var targetStream = el.getAttribute('rtc-stream');
-  var peerRoles = propValue ? propValue.split(reSep) : ['*'];
+    // create a data container that we will attach to the element
+    var data = el._rtc || (el._rtc = {});
 
-  // create a data container that we will attach to the element
-  var data = el._rtc || (el._rtc = {});
-
-  function attachStream(stream) {
-    debug('attaching stream');
-    media(stream).render(el);
-    data.streamId = stream.id;
-  }
-
-  function addStream(stream, peer) {
-    // if we don't have a stream or already have a stream id then bail
-    if (data.streamId) {
-      return;
+    function attachStream(stream) {
+      debug('attaching stream');
+      media(stream).render(el);
+      data.streamId = stream.id;
     }
 
-    // if we have a particular target stream, then go looking for it
-    if (targetStream) {
-      debug('requesting stream data');
-      sessionMgr.getStreamData(stream, function(data) {
-        debug('got stream data', data);
+    function addStream(stream, peer) {
+      // if we don't have a stream or already have a stream id then bail
+      if (data.streamId) {
+        return;
+      }
 
-        // if it's a match, then attach
-        if (data && data.name === targetStream) {
-          attachStream(stream);
-        }
-      });
-    }
-    // otherwise, automatically associate with the element
-    else {
-      attachStream(stream);
-    }
-  }
+      // if we have a particular target stream, then go looking for it
+      if (targetStream) {
+        debug('requesting stream data');
+        sessionMgr.getStreamData(stream, function(data) {
+          debug('got stream data', data);
 
-  // iterate through the peers and monitor events for that peer
-  peerRoles.forEach(function(role) {
-    eve.on('glue.peer.active.' + role, function(peer, peerId) {
+          // if it's a match, then attach
+          if (data && data.name === targetStream) {
+            attachStream(stream);
+          }
+        });
+      }
+      // otherwise, automatically associate with the element
+      else {
+        attachStream(stream);
+      }
+    }
+
+    qc.on('call:started', function(id, pc, data) {
+      var roleIdx = peerRoles.indexOf(data.role);
+
+      // if we don't have a valid role, and required one then do nothing
+      if (roleIdx < 0 && peerRoles.length !== 0) {
+        return;
+      }
+
       // if the element already has a peer, then do nothing
       if (data.peerId) {
         return;
       }
 
-      debug('peer active', peer.getRemoteStreams());
+      debug('peer active', pc.getRemoteStreams());
 
       // associate the peer id with the element
-      data.peerId = peerId;
+      data.peerId = id;
+
 
       // add existing streams
-      [].slice.call(peer.getRemoteStreams()).forEach(addStream);
-
-      // listen for add stream events
-      // NOTE: currently not in use as we have move to a non-reactive
-      // coupling approach to ensure firefox compatibility
-      // peer.addEventListener('addstream', function(evt) {
-      //   addStream(evt.stream, peer);
-      // });
-    });
-  });
-
-  eve.on('glue.peer.leave', function(peer, peerId) {
-    // if the peer leaving matches the remote peer, then cleanup
-    if (data.peerId === peerId) {
-      // reset the target media element
-      resetEl(el);
-
-      // reset the rtc data
-      data = el._rtc = {};
-    }
-  });
-
-  return el;
-}
-
-/**
-  #### initCapture(el)
-
-  Handle the initialization of an rtc-capture target
-**/
-function initCapture(el) {
-  // read the capture instructions
-  var configText = el.getAttribute('rtc-capture') || '';
-  var res = el.getAttribute('rtc-resolution') || el.getAttribute('rtc-res');
-  var fps = el.getAttribute('rtc-fps');
-
-  if (res) {
-    configText += ' min:' + res + ' max:' + res;
-  }
-
-  if (fps) {
-    configText += ' minfps:' + fps + ' maxfps:' + fps;
-  }
-
-  // patch in a capture method to the element
-  el.capture = enableCapture(el, captureConfig(configText));
-
-  // trigger capture
-  el.capture(function(stream) {
-    // broadcast the stream through the session manager
-    if (sessionMgr) {
-      sessionMgr.broadcast(stream, { name: el.id });
-    }
-  });
-}
-
-/** internal helpers */
-
-function enableCapture(el, config) {
-
-  function cap(callback) {
-    var stream = media({
-      constraints: config.toConstraints({
-        sources: sources
-      })
+      pc.getRemoteStreams().forEach(addStream);
     });
 
-    // render the stream to the target element
-    stream.render(el);
+    qc.on('call:ended', function(id) {
+      if (data.peerId === id) {
+        // reset the target media element
+        resetEl(el);
 
-    // capture and report errors
-    stream.on('error', function(err) {
-      console.log(
-        'Error attempting to capture media, requested constraints',
-        stream.constraints
-      );
-    });
-
-    // emit a capture event through the element
-    stream.on('capture', function(stream) {
-      // dispatch the capture event
-      el.dispatchEvent(new CustomEvent('capture', {
-        detail: { stream: stream }
-      }));
-
-      // trigger the callback if one supplied
-      if (typeof callback == 'function') {
-        callback(stream);
+        // reset the rtc data
+        data = el._rtc = {};
       }
     });
-  }
 
-  return function(callback) {
-    // if we already have sources, or cannot get source information
-    // then skip straight to capture
-    if (sources || (! canGetSources)) {
-      return cap(callback);
-    }
-
-    // get and update sources
-    MediaStreamTrack.getSources(function(s) {
-      // update the sources
-      sources = s;
-
-      // capture
-      cap(callback)
-    });
+    return el;
   };
 }
+
+
+/** internal helpers */
 
 function generateRoomName() {
   location.hash = Math.pow(2, 53) * Math.random();
