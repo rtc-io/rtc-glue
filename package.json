@@ -31,12 +31,13 @@
     "cog": "~0.5.1",
     "rtc-captureconfig": "~0.4.0",
     "sdp-transform": "~0.6.0",
-    "eve": "~0.4.1",
     "async": "^0.6.2",
     "rtc-core": "~0.7.1",
     "fdom": "^0.8.0",
-    "rtc-signaller": "^0.19.2",
     "rtc-media": "~1.5.0"
+  },
+  "peerDependencies": {
+    "rtc-quickconnect": "^1"
   },
   "testling": {
     "files": "test/all.js",
