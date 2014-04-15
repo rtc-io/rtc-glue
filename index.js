@@ -8,7 +8,6 @@
 
 var async = require('async');
 var url = require('url');
-var eve = require('eve');
 var qsa = require('fdom/qsa');
 var on = require('fdom/on');
 var extend = require('cog/extend');
@@ -28,18 +27,6 @@ var reSemiColonDelim = /\;\s*/;
 var canGetSources = typeof MediaStreamTrack != 'undefined' &&
   MediaStreamTrack.getSources;
 
-// initialise our config (using rtc- named metadata tags)
-var config = defaults({}, require('fdom/meta')(/^rtc-(.*)$/), {
-  room: location.hash.slice(1),
-  signalhost: location.origin || 'http://rtc.io/switchboard/'
-});
-
-var SessionManager = require('./sessionmanager');
-
-// initialise a sessionMgr for the module instance
-// at this stage we are only supporting one glue instance "per page", but
-// this may change in the future...
-var sessionMgr;
 var sources;
 
 // initialise some query selectors
@@ -173,73 +160,27 @@ var SELECTOR_DC = 'meta[name="rtc-data"],meta[name="rtc-channel"]';
   To be completed.
 
 **/
-var glue = module.exports = function(scope, opts) {
-  var startupOps = [ loadPrimus ];
+var glue = module.exports = function(qc, opts) {
   var debugTarget;
   var channels = qsa(SELECTOR_DC).map(readChannelConfig);
+
+  // initialise the scope (defaulting to document.body)
+  var scope = (opts || {}).scope || document.body;
 
   // initialise the remote elements
   var peers = qsa('*[rtc-peer]', scope).map(initPeer);
 
-  // apply any external opts to the configuration
-  extend(config, { channels: channels }, opts);
+  var captureTags = qsa('*[rtc-capture]', scope);
 
-  // determine if we are debugging
-  debugTarget = (config || {}).debug;
-  if (debugTarget) {
-    if (debugTarget === true) {
-      logger.enable('*');
-    }
-    else if (Array.isArray(debugTarget)) {
-      logger.enable.apply(logger, debugTarget);
-    }
-    else {
-      logger.enable(debugTarget);
-    }
+  // TODO: check errors
+  debug('startup ops completed, starting glue', config);
+  eve('glue.ready');
+
+  // if we don't have a room name, generate a room name
+  if (! config.room) {
+    config.room = generateRoomName();
   }
-
-  // run the startup operations
-  async.parallel(startupOps, function(err) {
-    var captureTags = qsa('*[rtc-capture]', scope);
-
-    // TODO: check errors
-    debug('startup ops completed, starting glue', config);
-    eve('glue.ready');
-
-    // if we don't have a room name, generate a room name
-    if (! config.room) {
-      config.room = generateRoomName();
-    }
-
-    // create the session manager
-    sessionMgr = typeof Primus != 'undefined' && new SessionManager(config);
-
-    if (sessionMgr) {
-      // tell the session manager how many capture sources we have
-      sessionMgr.streamCount = captureTags.length;
-
-      // wait until active
-      sessionMgr.once('active', function() {
-        captureTags.forEach(initCapture);
-
-        // announce ourselves
-        sessionMgr.announce();
-
-        // trigger a glue session active event
-        eve('glue.connected', null, sessionMgr.signaller, sessionMgr);
-      });
-    }
-    else {
-      captureTags.forEach(initCapture);
-    }
-  });
 };
-
-// wire in the events helper
-glue.events = require('./events');
-
-// expose the config through glue
-glue.config = config;
 
 // autoload glue
 if (typeof window != 'undefined') {
@@ -435,8 +376,4 @@ function generateRoomName() {
   location.hash = Math.pow(2, 53) * Math.random();
 
   return location.hash.slice(1);
-}
-
-function loadPrimus(callback) {
-  return signaller.loadPrimus(config.signalhost, callback);
 }
