@@ -9,7 +9,7 @@
 var async = require('async');
 var url = require('url');
 var qsa = require('fdom/qsa');
-var on = require('fdom/on');
+var meta = require('fdom/meta');
 var extend = require('cog/extend');
 var defaults = require('cog/defaults');
 var debug = require('cog/logger')('rtc-glue');
@@ -28,6 +28,8 @@ var capture = require('./lib/capture');
 
 // initialise some query selectors
 var SELECTOR_DC = 'meta[name="rtc-data"],meta[name="rtc-channel"]';
+
+require('cog/logger').enable('rtc-glue');
 
 /**
   # rtc-glue
@@ -131,7 +133,7 @@ var SELECTOR_DC = 'meta[name="rtc-data"],meta[name="rtc-channel"]';
 
   From version `0.9` of glue you can also specify one or more `rtc-data` meta
   tags that are used to specify data channels that you want configured for
-  your application.  When a connection is established between peers, the 
+  your application.  When a connection is established between peers, the
   connections are created with the appropriate data channels.
 
   When the data channel is open and available for communication a
@@ -160,6 +162,7 @@ var SELECTOR_DC = 'meta[name="rtc-data"],meta[name="rtc-channel"]';
 var glue = module.exports = function(qc, opts) {
   var debugTarget;
   var channels = qsa(SELECTOR_DC).map(readChannelConfig);
+  var metadata = meta(/^rtc-(.*)$/);
 
   // initialise the scope (defaulting to document.body)
   var scope = (opts || {}).scope || document.body;
@@ -170,9 +173,21 @@ var glue = module.exports = function(qc, opts) {
   // get sources
   getSources(function(sources) {
     async.map(qsa('*[rtc-capture]', scope), capture(sources), function(err, streams) {
+      if (err) {
+        return console.error(err);
+      }
 
+      // broadcast the stream
+      streams.forEach(qc.addStream);
     });
   });
+
+  // add the metadata to the profile
+  if (metadata.role) {
+    qc.profile({ role: metadata.role });
+  }
+
+  console.log(metadata);
 };
 
 /**
@@ -195,31 +210,33 @@ function initPeer(qc) {
     var peerRoles = propValue ? propValue.split(reSep) : [];
 
     // create a data container that we will attach to the element
-    var data = el._rtc || (el._rtc = {});
+    if (! el._rtc) {
+      el._rtc = {};
+    }
 
     function attachStream(stream) {
       debug('attaching stream');
       media(stream).render(el);
-      data.streamId = stream.id;
+      el._rtc.streamId = stream.id;
     }
 
     function addStream(stream, peer) {
       // if we don't have a stream or already have a stream id then bail
-      if (data.streamId) {
+      if (el._rtc.streamId) {
         return;
       }
 
       // if we have a particular target stream, then go looking for it
       if (targetStream) {
         debug('requesting stream data');
-        sessionMgr.getStreamData(stream, function(data) {
-          debug('got stream data', data);
+        // sessionMgr.getStreamData(stream, function(data) {
+        //   debug('got stream data', data);
 
-          // if it's a match, then attach
-          if (data && data.name === targetStream) {
-            attachStream(stream);
-          }
-        });
+        //   // if it's a match, then attach
+        //   if (data && data.name === targetStream) {
+        //     attachStream(stream);
+        //   }
+        // });
       }
       // otherwise, automatically associate with the element
       else {
@@ -229,6 +246,7 @@ function initPeer(qc) {
 
     qc.on('call:started', function(id, pc, data) {
       var roleIdx = peerRoles.indexOf(data.role);
+      debug('call started with peer: ' + id + ', checking element carefactor', data);
 
       // if we don't have a valid role, and required one then do nothing
       if (roleIdx < 0 && peerRoles.length !== 0) {
@@ -236,14 +254,14 @@ function initPeer(qc) {
       }
 
       // if the element already has a peer, then do nothing
-      if (data.peerId) {
+      if (el._rtc.peerId) {
         return;
       }
 
       debug('peer active', pc.getRemoteStreams());
 
       // associate the peer id with the element
-      data.peerId = id;
+      el._rtc.peerId = id;
 
 
       // add existing streams
@@ -251,12 +269,13 @@ function initPeer(qc) {
     });
 
     qc.on('call:ended', function(id) {
-      if (data.peerId === id) {
+      debug('captured call:ended for peer: ' + id);
+      if (el._rtc.peerId === id) {
         // reset the target media element
         resetEl(el);
 
         // reset the rtc data
-        data = el._rtc = {};
+        el._rtc = {};
       }
     });
 
