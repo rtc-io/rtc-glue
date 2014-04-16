@@ -14,9 +14,11 @@ var extend = require('cog/extend');
 var defaults = require('cog/defaults');
 var debug = require('cog/logger')('rtc-glue');
 var media = require('rtc-media');
+var mesh = require('rtc-mesh');
 var captureConfig = require('rtc-captureconfig');
 var transform = require('sdp-transform');
 var resetEl = require('rtc-core/reset');
+var pluck = require('whisk/pluck');
 // var liner = require('sdp-lines');
 
 var reSep = /[\s\,]\s*/;
@@ -167,8 +169,11 @@ var glue = module.exports = function(qc, opts) {
   // initialise the scope (defaulting to document.body)
   var scope = (opts || {}).scope || document.body;
 
+  // use rtc-mesh to create a shared model of data for the peers
+  var model = mesh(qc, { channelName: 'gluedata' });
+
   // initialise the remote elements
-  var peers = qsa('*[rtc-peer]', scope).map(initPeer(qc));
+  var peers = qsa('*[rtc-peer]', scope).map(initPeer(qc, model));
 
   // get sources
   getSources(function(sources) {
@@ -177,17 +182,26 @@ var glue = module.exports = function(qc, opts) {
         return console.error(err);
       }
 
+      // send stream data over the signalling channel
+      debug('setting streams information: streams_' + qc.id);
+      model.set('streams_' + qc.id, streams.map(pluck('_label')));
+
       // broadcast the stream
       streams.forEach(qc.addStream);
     });
   });
+
+  // set reactive
+  qc.reactive();
 
   // add the metadata to the profile
   if (metadata.role) {
     qc.profile({ role: metadata.role });
   }
 
-  console.log(metadata);
+  model.on('update', function() {
+    console.log('captured update: ', arguments);
+  });
 };
 
 /**
@@ -203,7 +217,7 @@ function readChannelConfig(el) {
   };
 }
 
-function initPeer(qc) {
+function initPeer(qc, model) {
   return function(el) {
     var propValue = el.getAttribute('rtc-peer');
     var targetStream = el.getAttribute('rtc-stream');
@@ -220,7 +234,10 @@ function initPeer(qc) {
       el._rtc.streamId = stream.id;
     }
 
-    function addStream(stream, peer) {
+    function addStream(stream, idx) {
+      var streamKey = 'streams_' + el._rtc.peerId;
+      var streamNames = el._rtc.peerId && model.get(streamKey);
+
       // if we don't have a stream or already have a stream id then bail
       if (el._rtc.streamId) {
         return;
@@ -228,15 +245,18 @@ function initPeer(qc) {
 
       // if we have a particular target stream, then go looking for it
       if (targetStream) {
-        debug('requesting stream data');
-        // sessionMgr.getStreamData(stream, function(data) {
-        //   debug('got stream data', data);
-
-        //   // if it's a match, then attach
-        //   if (data && data.name === targetStream) {
-        //     attachStream(stream);
-        //   }
-        // });
+        debug('requesting stream data (' + streamKey + '): ', streamNames);
+        if (! streamNames) {
+          return model.once('change:' + streamKey, function(streamNames) {
+            debug('captured stream names updated');
+            if (streamNames[idx] === targetStream) {
+              attachStream(stream);
+            }
+          });
+        }
+        else if (streamNames[idx] === targetStream) {
+          attachStream(stream);
+        }
       }
       // otherwise, automatically associate with the element
       else {
@@ -262,7 +282,6 @@ function initPeer(qc) {
 
       // associate the peer id with the element
       el._rtc.peerId = id;
-
 
       // add existing streams
       pc.getRemoteStreams().forEach(addStream);
