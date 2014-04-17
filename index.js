@@ -235,8 +235,7 @@ function initPeer(qc, model) {
     }
 
     function addStream(stream, idx) {
-      var streamKey = 'streams_' + el._rtc.peerId;
-      var streamNames = el._rtc.peerId && model.get(streamKey);
+      var streamKey = el._rtc.peerId && 'streams_' + el._rtc.peerId;
 
       // if we don't have a stream or already have a stream id then bail
       if (el._rtc.streamId) {
@@ -244,19 +243,13 @@ function initPeer(qc, model) {
       }
 
       // if we have a particular target stream, then go looking for it
-      if (targetStream) {
-        debug('requesting stream data (' + streamKey + '): ', streamNames);
-        if (! streamNames) {
-          return model.once('change:' + streamKey, function(streamNames) {
-            debug('captured stream names updated');
-            if (streamNames[idx] === targetStream) {
-              attachStream(stream);
-            }
-          });
-        }
-        else if (streamNames[idx] === targetStream) {
-          attachStream(stream);
-        }
+      if (targetStream && streamKey) {
+        debug('requesting stream data (' + streamKey + ')');
+        model.retrieve(streamKey, function(err, streamNames) {
+          if (streamNames[idx] === targetStream) {
+            attachStream(stream);
+          }
+        });
       }
       // otherwise, automatically associate with the element
       else {
