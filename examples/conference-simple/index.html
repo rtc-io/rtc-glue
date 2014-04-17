@@ -1,0 +1,24 @@
+<html>
+<head>
+<style>
+video {
+  max-width: 640px;
+}
+
+video[rtc-capture] {
+  max-width: 240px;
+  float: right;
+}
+</style>
+</head>
+<body>
+<!-- video for our local capture -->
+<video id="main" rtc-capture="camera"></video>
+
+<!-- remote container for our frient -->
+<video rtc-peer rtc-stream="main" muted></video>
+
+<!-- make magic happen -->
+<script src="index.js"></script>
+</body>
+</html>
