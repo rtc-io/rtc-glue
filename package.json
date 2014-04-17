@@ -27,7 +27,6 @@
     "crel": "~1.1.0"
   },
   "dependencies": {
-    "rtc": "^0.16.0",
     "cog": "~0.5.1",
     "rtc-captureconfig": "~0.4.0",
     "sdp-transform": "~0.6.0",
