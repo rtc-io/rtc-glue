@@ -7,7 +7,7 @@ their time in HTML and CSS rather than JS.
 
 [![NPM](https://nodei.co/npm/rtc-glue.png)](https://nodei.co/npm/rtc-glue/)
 
-[![unstable](http://hughsk.github.io/stability-badges/dist/unstable.svg)](http://github.com/hughsk/stability-badges)
+![unstable](https://img.shields.io/badge/stability-unstable-yellowgreen.svg)
 
 ## Example Usage
 
@@ -22,9 +22,14 @@ following HTML:
 <video id="main" rtc-capture="camera"></video>
 
 <!-- make magic happen -->
-<script src="../dist/glue.js"></script>
+<script src="index.js"></script>
 </body>
 </html>
+
+```
+
+```
+beefy --cwd examples/capture-only index.js
 ```
 
 It is then possible to tweak the `getUserMedia` constraints using some
@@ -37,9 +42,14 @@ flags in the `rtc-capture` attribute:
 <video id="main" rtc-capture="camera min:1280x720"></video>
 
 <!-- make magic happen -->
-<script src="../dist/glue.js"></script>
+<script src="index.js"></script>
 </body>
 </html>
+
+```
+
+```
+beefy --cwd examples/capture-tweakres index.js
 ```
 
 For those who prefer using separate attributes, you can achieve similar
@@ -52,9 +62,14 @@ behaviour using the `rtc-resolution` (or `rtc-res`) attribute:
 <video id="main" rtc-capture="camera" rtc-resolution="1280x720"></video>
 
 <!-- make magic happen -->
-<script src="../dist/glue.js"></script>
+<script src="index.js"></script>
 </body>
 </html>
+
+```
+
+```
+beefy --cwd examples/capture-res-attribute index.js
 ```
 
 ## Conferencing Example
@@ -65,8 +80,6 @@ signalling:
 ```html
 <html>
 <head>
-<!-- configure the signalling to use the test rtc.io public signaller -->
-<meta name="rtc-signalhost" content="http://rtc.io/switchboard/">
 <style>
 video {
   max-width: 640px;
@@ -86,23 +99,23 @@ video[rtc-capture] {
 <video rtc-peer rtc-stream="main" muted></video>
 
 <!-- make magic happen -->
-<script src="../dist/glue.js"></script>
-<script>
-glue.events.once('connected', function(signaller) {
-	console.log('connected');
-
-	signaller.on('color', function(data) {
-		console.log('received color notification: ', data);
-	});
-
-	signaller.send('/color', {
-		src: signaller.id,
-		color: 'blue'
-	});
-});
-</script>
+<script src="index.js"></script>
 </body>
 </html>
+
+```
+
+```js
+var quickconnect = require('rtc-quickconnect');
+var qc = quickconnect('http://rtc.io/switchboard/', { room: 'glue-simpleconf' });
+
+// use glue to autowire elements to the page
+require('rtc-glue')(qc);
+
+```
+
+```
+beefy --cwd examples/conference-simple index.js
 ```
 
 ## Getting Glue
@@ -147,9 +160,14 @@ example:
 <video id="secondary" rtc-capture="camera:1"></video>
 
 <!-- make magic happen -->
-<script src="../dist/glue.js"></script>
+<script src="index.js"></script>
 </body>
 </html>
+
+```
+
+```
+beefy --cwd examples/capture-multicam index.js
 ```
 
 ## On Custom Attributes
@@ -186,7 +204,7 @@ of the `rtc-quickconnect` initialization.
 
 From version `0.9` of glue you can also specify one or more `rtc-data` meta
 tags that are used to specify data channels that you want configured for
-your application.  When a connection is established between peers, the 
+your application.  When a connection is established between peers, the
 connections are created with the appropriate data channels.
 
 When the data channel is open and available for communication a
@@ -230,81 +248,6 @@ indicates that it is a getUserMedia capture target.
 To be completed.
 
 ### Internal Functions
-
-#### initPeer(el)
-
-Handle the initialization of a rtc-remote target
-
-#### initCapture(el)
-
-Handle the initialization of an rtc-capture target
-
-## Events
-
-Glue uses [eve](https://github.com/adobe-webplatform/eve) under the hood,
-and exposes a simple interface to eve events through the `glue.events`
-interface.
-
-If using eve directly these events are namespaced with the prefix of
-`glue.` to avoid event name clashes on the bus, but you can use the
-`glue.events` endpoint to attach to eve without the namespace if you prefer.
-
-For example:
-
-```js
-var glue = require('rtc-glue');
-var eve = require('eve');
-
-eve.once('glue.ready', function() {
-  // will be triggered when glue has initialized
-});
-
-glue.events.once('ready', function() {
-  // will also be triggered once ready, and equivalent to glue.ready
-  // when directly using eve
-});
-
-// listen for connected events
-// NOTE: only trigger when a page has valid peer elements
-glue.events.once('connected', function(signaller) {
-	console.log('connected');
-
-	signaller.on('color', function(data) {
-		console.log('received color notification: ', arguments);
-	});
-
-	signaller.send('/color', {
-		src: signaller.id,
-		color: 'blue'
-	});
-});
-```
-
-### SessionManager
-
-The SessionManager class assists with interacting with the signalling
-server and creating peer connections between valid parties.  It uses
-eve to create a decoupled way to get peer information.
-
-#### announce()
-
-Announce ourselves on the signalling channel
-
-#### broadcast(stream)
-
-Broadcast a stream to our connected peers.
-
-#### getStreamData(stream, callback)
-
-Given the input stream `stream`, return the data for the stream.  The
-provided `callback` will not be called until relevant data is held by
-the session manager.
-
-#### tagStream(stream, targetId, data)
-
-The tagStream is used to pass stream identification information along to the
-target peer.  This information is useful when a particular remote media
-element is expecting the contents of a particular capture target.
 
 ## License(s)
 

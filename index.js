@@ -46,24 +46,42 @@ require('cog/logger').enable('rtc-glue');
   with regards to named attributed, etc.  For instance, consider the
   following HTML:
 
-  <<< examples/capture-only.html
+  <<< examples/capture-only/index.html
+
+  ```
+  beefy --cwd examples/capture-only index.js
+  ```
 
   It is then possible to tweak the `getUserMedia` constraints using some
   flags in the `rtc-capture` attribute:
 
-  <<< examples/capture-tweakres.html
+  <<< examples/capture-tweakres/index.html
+
+  ```
+  beefy --cwd examples/capture-tweakres index.js
+  ```
 
   For those who prefer using separate attributes, you can achieve similar
   behaviour using the `rtc-resolution` (or `rtc-res`) attribute:
 
-  <<< examples/res-attribute.html
+  <<< examples/capture-res-attribute/index.html
+
+  ```
+  beefy --cwd examples/capture-res-attribute index.js
+  ```
 
   ## Conferencing Example
 
   The following is a simple example of conferencing using some hosted rtc.io
   signalling:
 
-  <<< examples/conference-simple.html
+  <<< examples/conference-simple/index.html
+
+  <<< examples/conference-simple/index.js
+
+  ```
+  beefy --cwd examples/conference-simple index.js
+  ```
 
   ## Getting Glue
 
@@ -99,7 +117,11 @@ require('cog/logger').enable('rtc-glue');
   machine (if it is able to query devices).  The following is a larger
   example:
 
-  <<< examples/capture-multicam.html
+  <<< examples/capture-multicam/index.html
+
+  ```
+  beefy --cwd examples/capture-multicam index.js
+  ```
 
   ## On Custom Attributes
 
@@ -170,16 +192,21 @@ var glue = module.exports = function(qc, opts) {
   var scope = (opts || {}).scope || document.body;
 
   // use rtc-mesh to create a shared model of data for the peers
-  var model = mesh(qc, { channelName: 'gluedata' });
+  var model = qc ? mesh(qc, { channelName: 'gluedata' }) : null;
 
   // initialise the remote elements
-  var peers = qsa('*[rtc-peer]', scope).map(initPeer(qc, model));
+  var peers = qc ? qsa('*[rtc-peer]', scope).map(initPeer(qc, model)) : [];
 
   // get sources
   getSources(function(sources) {
     async.map(qsa('*[rtc-capture]', scope), capture(sources), function(err, streams) {
       if (err) {
         return console.error(err);
+      }
+
+      // if we don't have a qc instance, then abort further processing
+      if (! qc) {
+        return;
       }
 
       // send stream data over the signalling channel
@@ -191,17 +218,20 @@ var glue = module.exports = function(qc, opts) {
     });
   });
 
-  // set reactive
-  qc.reactive();
+  // if we have been passed a qc instance, then do the full initialization
+  if (qc) {
+    // set reactive
+    qc.reactive();
 
-  // add the metadata to the profile
-  if (metadata.role) {
-    qc.profile({ role: metadata.role });
+    // add the metadata to the profile
+    if (metadata.role) {
+      qc.profile({ role: metadata.role });
+    }
+
+    model.on('update', function() {
+      console.log('captured update: ', arguments);
+    });
   }
-
-  model.on('update', function() {
-    console.log('captured update: ', arguments);
-  });
 };
 
 /**
