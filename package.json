@@ -30,12 +30,12 @@
     "cog": "~0.5.1",
     "rtc-captureconfig": "~0.4.0",
     "sdp-transform": "~0.6.0",
-    "async": "^0.6.2",
-    "rtc-core": "~0.7.1",
-    "fdom": "^0.8.0",
+    "async": "~0.7",
+    "rtc-core": "~0.7",
+    "fdom": "~0.8",
     "rtc-media": "^1",
-    "rtc-mesh": "^0.5.2",
-    "whisk": "^0.6.0"
+    "rtc-mesh": "~0.6",
+    "whisk": "~0.6"
   },
   "peerDependencies": {
     "rtc-quickconnect": "^1"
