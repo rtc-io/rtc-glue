@@ -11,6 +11,8 @@ their time in HTML and CSS rather than JS.
 
 ## Example Usage
 
+### Capture Only
+
 Glue works by looking for HTML tags that follow particular conventions
 with regards to named attributed, etc.  For instance, consider the
 following HTML:
@@ -78,7 +80,7 @@ Run locally with:
 beefy --cwd examples/capture-res-attribute index.js
 ```
 
-## Conferencing Example
+### P2P Connectivity
 
 The following is a simple example of conferencing using some hosted rtc.io
 signalling:
@@ -125,22 +127,6 @@ Run locally with:
 ```
 beefy --cwd examples/conference-simple index.js
 ```
-
-## Getting Glue
-
-Primarily glue is designed for use in a standalone situation, and thus
-comes pre-packaged in a UMDjs
-[distribution](https://github.com/rtc-io/rtc-glue/tree/master/dist). If
-you prefer working with browserify, then it will still work quite nicely
-and you should just `npm install rtc-glue` like you would with other
-modules of the rtc.io suite.
-
-## Running the Examples
-
-This module of the [rtc.io](https://rtc.io/) suite is a little different
-to others in that it comes with a ready to run js file.  Simply start
-a webserver in the root of the directory after cloning.  If you are looking
-for a good one, I'd recommend [st](https://github.com/isaacs/st).
 
 ## Targeted Media Capture
 
@@ -195,11 +181,6 @@ options, each which is used in the form of:
 ```html
 <meta name="rtc-%flagname%" content="config content" />
 ```
-
-#### rtc-room
-
-A custom room that new conversations will be created in.  If not specified
-this will default to a value of `auto`.
 
 #### rtc-role
 
