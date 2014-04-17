@@ -28,6 +28,8 @@ following HTML:
 
 ```
 
+Run locally with:
+
 ```
 beefy --cwd examples/capture-only index.js
 ```
@@ -48,6 +50,8 @@ flags in the `rtc-capture` attribute:
 
 ```
 
+Run locally with:
+
 ```
 beefy --cwd examples/capture-tweakres index.js
 ```
@@ -67,6 +71,8 @@ behaviour using the `rtc-resolution` (or `rtc-res`) attribute:
 </html>
 
 ```
+
+Run locally with:
 
 ```
 beefy --cwd examples/capture-res-attribute index.js
@@ -113,6 +119,8 @@ var qc = quickconnect('http://rtc.io/switchboard/', { room: 'glue-simpleconf' })
 require('rtc-glue')(qc);
 
 ```
+
+Run locally with:
 
 ```
 beefy --cwd examples/conference-simple index.js

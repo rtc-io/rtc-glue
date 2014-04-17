@@ -48,6 +48,8 @@ require('cog/logger').enable('rtc-glue');
 
   <<< examples/capture-only/index.html
 
+  Run locally with:
+
   ```
   beefy --cwd examples/capture-only index.js
   ```
@@ -57,6 +59,8 @@ require('cog/logger').enable('rtc-glue');
 
   <<< examples/capture-tweakres/index.html
 
+  Run locally with:
+
   ```
   beefy --cwd examples/capture-tweakres index.js
   ```
@@ -65,6 +69,8 @@ require('cog/logger').enable('rtc-glue');
   behaviour using the `rtc-resolution` (or `rtc-res`) attribute:
 
   <<< examples/capture-res-attribute/index.html
+
+  Run locally with:
 
   ```
   beefy --cwd examples/capture-res-attribute index.js
@@ -78,6 +84,8 @@ require('cog/logger').enable('rtc-glue');
   <<< examples/conference-simple/index.html
 
   <<< examples/conference-simple/index.js
+
+  Run locally with:
 
   ```
   beefy --cwd examples/conference-simple index.js
