@@ -52,6 +52,17 @@ var SELECTOR_DC = 'meta[name="rtc-data"],meta[name="rtc-channel"]';
   primarily designed for web application coders who would prefer to spend
   their time in HTML and CSS rather than JS.
 
+  ## Deprecated
+
+  We are starting to see quite a bit of promise around
+  [Web Components](http://webcomponents.org/), and there has even been some
+  interesting work done incorporating rtc.io as a webcomponents layer in
+  the [interconnect](https://github.com/interconnectapp) project.
+
+  While glue provided an interesting view on what a declarative approach to
+  WebRTC might have looked like, the future is most likely in using Web
+  Components to achieve this.
+
   ## Example Usage
 
   Glue works by looking for HTML tags that follow particular conventions

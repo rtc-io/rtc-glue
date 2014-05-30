@@ -7,7 +7,18 @@ their time in HTML and CSS rather than JS.
 
 [![NPM](https://nodei.co/npm/rtc-glue.png)](https://nodei.co/npm/rtc-glue/)
 
-[![unstable](http://hughsk.github.io/stability-badges/dist/unstable.svg)](http://github.com/hughsk/stability-badges)
+[![unstable](https://img.shields.io/badge/stability-unstable-yellowgreen.svg)](https://github.com/badges/stability-badges) 
+
+## Deprecated
+
+We are starting to see quite a bit of promise around
+[Web Components](http://webcomponents.org/), and there has even been some
+interesting work done incorporating rtc.io as a webcomponents layer in
+the [interconnect](https://github.com/interconnectapp) project.
+
+While glue provided an interesting view on what a declarative approach to
+WebRTC might have looked like, the future is most likely in using Web
+Components to achieve this.
 
 ## Example Usage
 
