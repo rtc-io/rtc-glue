@@ -16,6 +16,7 @@ var defaults = require('cog/defaults');
 var logger = require('cog/logger');
 var debug = logger('glue');
 var signaller = require('rtc-signaller');
+var loadPrimus = require('rtc-signaller/primus-loader');
 var media = require('rtc-media');
 var captureConfig = require('rtc-captureconfig');
 var transform = require('sdp-transform');
@@ -158,7 +159,7 @@ var SELECTOR_DC = 'meta[name="rtc-data"],meta[name="rtc-channel"]';
 
   From version `0.9` of glue you can also specify one or more `rtc-data` meta
   tags that are used to specify data channels that you want configured for
-  your application.  When a connection is established between peers, the 
+  your application.  When a connection is established between peers, the
   connections are created with the appropriate data channels.
 
   When the data channel is open and available for communication a
@@ -185,7 +186,7 @@ var SELECTOR_DC = 'meta[name="rtc-data"],meta[name="rtc-channel"]';
 
 **/
 var glue = module.exports = function(scope, opts) {
-  var startupOps = [ loadPrimus ];
+  var startupOps = [ initSignaller ];
   var debugTarget;
   var channels = qsa(SELECTOR_DC).map(readChannelConfig);
 
@@ -448,6 +449,6 @@ function generateRoomName() {
   return location.hash.slice(1);
 }
 
-function loadPrimus(callback) {
-  return signaller.loadPrimus(config.signalhost, callback);
+function initSignaller(callback) {
+  return loadPrimus(config.signalhost, callback);
 }
