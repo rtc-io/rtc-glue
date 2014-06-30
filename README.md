@@ -7,7 +7,7 @@ their time in HTML and CSS rather than JS.
 
 [![NPM](https://nodei.co/npm/rtc-glue.png)](https://nodei.co/npm/rtc-glue/)
 
-[![unstable](https://img.shields.io/badge/stability-unstable-yellowgreen.svg)](https://github.com/badges/stability-badges) 
+[![deprecated](https://img.shields.io/badge/stability-deprecated-aa8899.svg)](https://github.com/dominictarr/stability#deprecated) 
 
 ## Deprecated
 
@@ -197,7 +197,7 @@ of the `rtc-quickconnect` initialization.
 
 From version `0.9` of glue you can also specify one or more `rtc-data` meta
 tags that are used to specify data channels that you want configured for
-your application.  When a connection is established between peers, the 
+your application.  When a connection is established between peers, the
 connections are created with the appropriate data channels.
 
 When the data channel is open and available for communication a
