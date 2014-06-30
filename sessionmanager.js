@@ -4,7 +4,7 @@
 
 var eve = require('eve');
 var EventEmitter = require('events').EventEmitter;
-var rtc = require('rtc');
+var rtc = require('rtc-tools');
 var debug = require('cog/logger')('glue-sessionmanager');
 var createSignaller = require('rtc-signaller');
 var extend = require('cog/extend');
